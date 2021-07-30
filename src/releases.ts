@@ -24,7 +24,7 @@ export type Release = ArrayElement<Releases>;
 // nb. this only gets a single pag, so if your're looking for a release
 // more than 100 releases ago then, well, bad times.
 export async function getReleases(owner: string, repo: string): Promise<Releases> {
-    const octo = new Octokit({ auth: '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' });
+    const octo = new Octokit();
     const rels = await octo.rest.repos.listReleases({
         owner, repo, per_page: 100,
     });

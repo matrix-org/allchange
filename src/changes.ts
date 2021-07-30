@@ -194,7 +194,7 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
 export async function getPrInfo(
     repoOwner: string, repoName: string, prNumbers: string[],
 ): Promise<PrInfo[]> {
-    const octo = new Octokit({ auth: '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' });
+    const octo = new Octokit();
     const prNumSet = new Set(prNumbers.map(n => parseInt(n)));
     const mergedPrInfo: PrInfo[] = [];
 
