@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*
 Copyright 2021 The Matrix.org Foundation C.I.C.
 
