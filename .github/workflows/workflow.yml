@@ -1,10 +1,14 @@
+name: allchange CI
 on: [push, pull_request]
-steps:
-- uses: actions/checkout@v2
-- uses: actions/setup-node@v2
-  with:
-    node-version: '14'
-    cache: 'yarn'
-- run: yarn install
-- run: yarn lint
-- run: yarn test
+jobs:
+    runs-on: ubuntu-latest
+
+    steps:
+        - uses: actions/checkout@v2
+        - uses: actions/setup-node@v2
+          with:
+            node-version: '14'
+            cache: 'yarn'
+        - run: yarn install
+        - run: yarn lint
+        - run: yarn test
