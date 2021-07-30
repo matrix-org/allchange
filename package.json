@@ -1,7 +1,7 @@
 {
   "name": "allchange",
   "version": "0.0.1",
-  "main": "src/index.ts",
+  "main": "lib/index.js",
   "license": "Apache-2.0",
   "scripts": {
     "prepare": "tsc",
@@ -10,6 +10,14 @@
     "lint:js": "eslint src",
     "lint:types": "tsc --noEmit",
     "test": "jest"
+  },
+  "files": [
+    "/lib/",
+    "/LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/matrix-org/allchange.git"
   },
   "bin": {
     "allchange": "lib/index.js"
