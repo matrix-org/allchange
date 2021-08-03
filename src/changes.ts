@@ -63,6 +63,7 @@ export interface IChange {
     changeType: ChangeType;
     fixes: IIssueID[];
     breaking: boolean;
+    security: boolean;
     shouldInclude?: boolean;
 }
 
@@ -132,6 +133,7 @@ export function getMergedPrs(repoDir: string, from: string, to: string): Promise
 
 export function changeFromPrInfo(pr: PrInfo): IChange {
     let breaking = false;
+    const security = false;
     let changeType: ChangeType = null;
     for (const label of pr.labels) {
         if (labelToChangeType[label.name] !== undefined) {
@@ -140,6 +142,14 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
             breaking = true;
         }
     }
+
+    // security fixes are annoying: we normally do them with github's security advisory
+    // tooling, but this creates a temporary private fork and merges the changes in with a merge
+    // commit similar to a PR, but no github pull object ever exists. Best we could do is
+    // parse the body of the merge commit to try to work out that it's a security fix.
+    /*if () {
+        security = true;
+    }*/
 
     let notes = pr.title;
     let headline = null;
@@ -188,6 +198,7 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
         changeType,
         fixes,
         breaking,
+        security,
     };
 }
 

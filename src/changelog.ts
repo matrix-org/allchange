@@ -146,8 +146,19 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
 
     const shouldInclude = changes.filter(c => c.shouldInclude);
     const breaking = shouldInclude.filter(c => c.breaking);
-    const features = shouldInclude.filter(c => !c.breaking).filter(c => c.changeType == ChangeType.FEATURE);
-    const bugfixes = shouldInclude.filter(c => !c.breaking).filter(c => c.changeType == ChangeType.BUGFIX);
+    const security = shouldInclude.filter(c => c.security);
+
+    const others = shouldInclude.filter(c => !c.breaking && !c.security);
+    const features = others.filter(c => c.changeType == ChangeType.FEATURE);
+    const bugfixes = others.filter(c => c.changeType == ChangeType.BUGFIX);
+
+    if (security.length > 0) {
+        lines.push('## \uD83D\uDD12 SECURITY FIXES');
+        for (const change of security) {
+            lines.push(...makeChangeEntry(change, forProject));
+        }
+        lines.push('');
+    }
 
     if (breaking.length > 0) {
         lines.push('## \uD83D\uDEA8 BREAKING CHANGES');
