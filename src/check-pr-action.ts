@@ -132,6 +132,7 @@ async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> 
 
 async function main() {
     try {
+        console.log("Starting...");
         const myToken = core.getInput('ghToken');
         const octokit = github.getOctokit(myToken);
 
@@ -139,7 +140,9 @@ async function main() {
         const forProjectName = github.context.repo.repo;
         let pr = github.context.payload.pull_request as PrInfo; // of course the types aren't compatible
 
+        console.log("Scanning for labels to add...");
         pr = await addLabels(octokit, pr);
+        console.log("Label scan done.");
 
         const change = changeFromPrInfo(pr);
 
