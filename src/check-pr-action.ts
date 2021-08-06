@@ -146,8 +146,6 @@ async function main() {
 
         const change = changeFromPrInfo(pr);
 
-        const entry = makeChangeEntry(change, { name: forProjectName, ...github.context.repo });
-
         const lines = [] as string[];
         if (!hasChangeTypeLabel(pr)) {
             lines.push("This PR currently has no changelog labels, so will not be included in changelogs.");
@@ -176,6 +174,8 @@ async function main() {
                 "This change has no change notes, so will not be included in the changelog.",
             );
         } else {
+            const entry = makeChangeEntry(change, { name: forProjectName, ...github.context.repo });
+
             lines.push("Here's what your changelog entry will look like:");
             lines.push("");
             if (change.breaking) {
