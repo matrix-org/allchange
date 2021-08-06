@@ -127,6 +127,10 @@ function makeChangeEntry(change: IChange, forProject: Project): string {
         line += ` Fixes ${fixesString}.`;
     }
 
+    if (!['MEMBER', 'OWNER'].includes(change.pr.author_association)) {
+        line += ` Contributed by [${change.pr.user.login}](${change.pr.user.html_url}).`;
+    }
+
     return line;
 }
 
