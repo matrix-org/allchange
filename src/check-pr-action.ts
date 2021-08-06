@@ -86,12 +86,15 @@ async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> 
         let changeType;
         switch (matches[1].toLowerCase()) {
             case 'enhancement':
+            case 'feature':
                 changeType = ChangeType.FEATURE;
                 break;
             case 'defect':
+            case 'bugfix':
                 changeType = ChangeType.BUGFIX;
                 break;
             case 'task':
+            case 'internal':
                 changeType = ChangeType.TASK;
                 break;
             default:
