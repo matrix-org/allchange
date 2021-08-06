@@ -170,36 +170,38 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
     let matches: RegExpMatchArray;
     const fixes = [] as IIssueID[];
 
-    for (const line of pr.body.split("\n")) {
-        const trimmed = line.trim();
-        if (trimmed.toLowerCase().startsWith(NOTES_MAGIC_TEXT)) {
-            notes = trimmed.split(':', 2)[1].trim();
-            if (notes.toLowerCase() === 'none') notes = null;
-        } else if (trimmed.toLowerCase().startsWith(HEADLINE_MAGIC_TEXT)) {
-            headline = trimmed.split(':', 2)[1].trim();
-        } else if (matches = line.match(PROJECT_NOTES_REGEX)) {
-            notesByProject[matches[1]] = matches[2].trim();
-        } else if (matches = line.match(HASH_NUMBER_ISSUE_REGEXP)) {
-            // bafflingly, github's API doesn't give you issues fixed by this PR,
-            // so let's try to parse it ourselves (although of course this will only
-            // get ones in the PR body, not the comments...)
-            fixes.push({
-                owner: pr.base.repo.owner.name,
-                repo: pr.base.repo.name,
-                number: parseInt(matches[1]),
-            });
-        } else if (matches = line.match(OWNER_HASH_NUMBER_ISSUE_REGEXP)) {
-            fixes.push({
-                owner: matches[1],
-                repo: matches[2],
-                number: parseInt(matches[3]),
-            });
-        } else if (matches = line.match(ISSUE_URL_REGEXP)) {
-            fixes.push({
-                owner: matches[1],
-                repo: matches[2],
-                number: parseInt(matches[3]),
-            });
+    if (pr.body) {
+        for (const line of pr.body.split("\n")) {
+            const trimmed = line.trim();
+            if (trimmed.toLowerCase().startsWith(NOTES_MAGIC_TEXT)) {
+                notes = trimmed.split(':', 2)[1].trim();
+                if (notes.toLowerCase() === 'none') notes = null;
+            } else if (trimmed.toLowerCase().startsWith(HEADLINE_MAGIC_TEXT)) {
+                headline = trimmed.split(':', 2)[1].trim();
+            } else if (matches = line.match(PROJECT_NOTES_REGEX)) {
+                notesByProject[matches[1]] = matches[2].trim();
+            } else if (matches = line.match(HASH_NUMBER_ISSUE_REGEXP)) {
+                // bafflingly, github's API doesn't give you issues fixed by this PR,
+                // so let's try to parse it ourselves (although of course this will only
+                // get ones in the PR body, not the comments...)
+                fixes.push({
+                    owner: pr.base.repo.owner.name,
+                    repo: pr.base.repo.name,
+                    number: parseInt(matches[1]),
+                });
+            } else if (matches = line.match(OWNER_HASH_NUMBER_ISSUE_REGEXP)) {
+                fixes.push({
+                    owner: matches[1],
+                    repo: matches[2],
+                    number: parseInt(matches[3]),
+                });
+            } else if (matches = line.match(ISSUE_URL_REGEXP)) {
+                fixes.push({
+                    owner: matches[1],
+                    repo: matches[2],
+                    number: parseInt(matches[3]),
+                });
+            }
         }
     }
 
