@@ -44,6 +44,7 @@ interface SortOfAnOctokit {
 async function findMyComment(octokit: SortOfAnOctokit): Promise<number> {
     const me = await octokit.request('GET /user');
 
+    console.log("Listing comments...");
     const comments = await octokit.rest.issues.listComments({
         ...github.context.repo,
         issue_number: github.context.payload.number,
@@ -59,12 +60,14 @@ async function findMyComment(octokit: SortOfAnOctokit): Promise<number> {
 async function postOrUpdateMyComment(text: string, octokit: SortOfAnOctokit) {
     const existingCommentId = await findMyComment(octokit);
     if (existingCommentId === null) {
+        console.log("Creating new comment...");
         await octokit.rest.issues.createComment({
             ...github.context.repo,
             issue_number: github.context.payload.number,
             body: text,
         });
     } else {
+        console.log(`Updating comment ${existingCommentId}...`);
         await octokit.rest.issues.updateComment({
             ...github.context.repo,
             comment_id: existingCommentId,
@@ -97,12 +100,14 @@ async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> 
 
         for (const [label, labelType] of Object.entries(labelToChangeType)) {
             if (labelType === changeType && !hasLabel(label, pr)) {
+                console.log("Adding label: " + label);
                 await octokit.rest.issues.addLabels({
                     ...github.context.repo,
                    issue_number: pr.number,
                    labels: [label],
                 });
             } else if (hasLabel(label, pr)) {
+                console.log("Removing label: " + label);
                 await octokit.rest.issues.removeLabel({
                     ...github.context.repo,
                    issue_number: pr.number,
@@ -111,6 +116,7 @@ async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> 
             }
         }
 
+        console.log("Refreshing PR labels...");
         const resp = await octokit.rest.pulls.get({
             ...github.context.repo,
             pull_number: pr.number,
