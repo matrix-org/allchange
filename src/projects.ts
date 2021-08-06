@@ -35,6 +35,12 @@ export interface ReleaseConfig {
     subprojects: Record<string, SubProjectConfig>;
 }
 
+export interface IProject {
+    name: string;
+    owner: string;
+    repo: string;
+}
+
 export async function getPackageJsonAtVersion(dir: string, ver: string): Promise<any> {
     const gitShow = v => new Promise((resolve, reject) => {
         execFile('git', ['show', `${v}:package.json`], {
@@ -86,6 +92,12 @@ function getDepVersion(ver: string, proj: string, branchMode: BranchMode) {
     }
 }
 
+export function getChangeNotes(change: IChange, projectName: string): string {
+    if ([ChangeType.TASK, null].includes(change.changeType)) return null;
+
+    return change.notesByProject[projectName] || change.notes;
+}
+
 export class Project {
     private releaseConfigCache = null;
     public owner: string = null;
@@ -122,7 +134,7 @@ export class Project {
     }
 
     private shouldIncludeChange(forProject: Project, change: IChange, includeByDefault: boolean) {
-        if (forProject.getChangeNotes(change) === null) return false;
+        if (getChangeNotes(change, forProject.name) === null) return false;
         if (change.notesByProject[forProject.name]) return true;
 
         return includeByDefault;
@@ -183,11 +195,5 @@ export class Project {
                 );
             }
         }
-    }
-
-    public getChangeNotes(change: IChange): string {
-        if ([ChangeType.TASK, null].includes(change.changeType)) return null;
-
-        return change.notesByProject[this.name] || change.notes;
     }
 }

@@ -39,13 +39,13 @@ export enum ChangeType {
     TASK,
 }
 
-const labelToChangeType = {
+export const labelToChangeType = {
     'T-Enhancement': ChangeType.FEATURE,
     'T-Defect': ChangeType.BUGFIX,
     'T-Task': ChangeType.TASK,
 };
 
-const BREAKING_CHANGE_LABEL = 'X-Breaking-Change';
+export const BREAKING_CHANGE_LABEL = 'X-Breaking-Change';
 
 // M A G I C!: https://stackoverflow.com/questions/41253310/typescript-retrieve-element-type-information-from-array-type#51399781
 // (Github gives us the return type of the endpoints, which is an array: we want the type
@@ -129,6 +129,19 @@ export function getMergedPrs(repoDir: string, from: string, to: string): Promise
             resolve(prs);
         });
     });
+}
+
+export function getChangeTypeLabels(): string[] {
+    return Object.keys(labelToChangeType);
+}
+
+export function hasChangeTypeLabel(pr: PrInfo): boolean {
+    const changeLabels = getChangeTypeLabels();
+    for (const lbl of pr.labels) {
+        if (changeLabels.includes(lbl.name)) return true;
+    }
+
+    return false;
 }
 
 export function changeFromPrInfo(pr: PrInfo): IChange {
