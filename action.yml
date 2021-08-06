@@ -1,0 +1,8 @@
+name: "Changelog entry checker"
+inputs:
+ ghToken:
+   description: 'GitHub token'
+   required: true
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

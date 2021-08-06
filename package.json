@@ -29,6 +29,8 @@
     "preset": "ts-jest"
   },
   "dependencies": {
+    "@actions/core": "^1.4.0",
+    "@actions/github": "^5.0.0",
     "@octokit/rest": "^18.6.7",
     "cli-color": "^2.0.0",
     "js-yaml": "^4.1.0",

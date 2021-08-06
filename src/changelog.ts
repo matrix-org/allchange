@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 import { ChangeType, IChange } from "./changes";
-import { Project } from "./projects";
+import { getChangeNotes, Project } from "./projects";
 import { formatIssue } from "./issue";
 
 import semver, { SemVer } from 'semver';
@@ -29,6 +29,11 @@ export interface IChangelogEntry {
     version: string;
     text: string;
 }
+
+export const securityFixHeader = '## \uD83D\uDD12 SECURITY FIXES';
+export const breakingChangeHeader = '## \uD83D\uDEA8 BREAKING CHANGES';
+export const featureChangeHeader = '## \u2728 Features';
+export const bugFixChangeHeader = '## \uD83D\uDC1B Bug Fixes';
 
 async function* readChangelog(project: Project): AsyncGenerator<IChangelogEntry> {
     const fp = fs.createReadStream(path.join(project.dir, 'CHANGELOG.md'));
@@ -119,7 +124,7 @@ function engJoin(things): string {
 function makeChangeEntry(change: IChange, forProject: Project): string[] {
     const lines = [];
 
-    lines.push(` * ${sanitiseMarkdown(forProject.getChangeNotes(change))}`);
+    lines.push(` * ${sanitiseMarkdown(getChangeNotes(change, forProject.name))}`);
     lines.push(`   [\\#${change.pr.number}](${change.pr.html_url})`);
 
     if (change.fixes.length > 0) {
@@ -153,7 +158,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
     const bugfixes = others.filter(c => c.changeType == ChangeType.BUGFIX);
 
     if (security.length > 0) {
-        lines.push('## \uD83D\uDD12 SECURITY FIXES');
+        lines.push(securityFixHeader);
         for (const change of security) {
             lines.push(...makeChangeEntry(change, forProject));
         }
@@ -161,7 +166,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
     }
 
     if (breaking.length > 0) {
-        lines.push('## \uD83D\uDEA8 BREAKING CHANGES');
+        lines.push(breakingChangeHeader);
         for (const change of breaking) {
             lines.push(...makeChangeEntry(change, forProject));
         }
@@ -169,7 +174,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
     }
 
     if (features.length > 0) {
-        lines.push('## \u2728 Features');
+        lines.push(featureChangeHeader);
         for (const change of features) {
             lines.push(...makeChangeEntry(change, forProject));
         }
@@ -177,7 +182,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
     }
 
     if (bugfixes.length > 0) {
-        lines.push('## \uD83D\uDC1B Bug Fixes');
+        lines.push(bugFixChangeHeader);
 
         for (const change of bugfixes) {
             lines.push(...makeChangeEntry(change, forProject));
