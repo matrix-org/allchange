@@ -152,17 +152,19 @@ async function main() {
         const lines = [] as string[];
         if (!hasChangeTypeLabel(pr)) {
             lines.push("This PR currently has no changelog labels, so will not be included in changelogs.");
+            lines.push("");
+            const labelsWithFormatting = getChangeTypeLabels().map(l => '`' + l + '`').join(", ");
             // This is a very crude approximation of github's permission model.
             // It will almost certainly be wrong sometimes.
             if (['MEMBER', 'OWNER'].includes(change.pr.author_association)) {
                 lines.push(
-                    `Add one of: ${getChangeTypeLabels().join(", ")} to indicate what type of change this is `,
+                    `Add one of: ${labelsWithFormatting} to indicate what type of change this is ` +
                     `plus ${BREAKING_CHANGE_LABEL} if it's a breaking change.`,
                 );
             } else {
                 lines.push(
-                    `A reviewer can add one of: ${getChangeTypeLabels().join(", ")} to ` +
-                    `indicate what type of change this is, or add "Type: [enhancement/defect/task]" `,
+                    `A reviewer can add one of: ${labelsWithFormatting} to ` +
+                    `indicate what type of change this is, or add \`Type: [enhancement/defect/task]\` ` +
                     `to the description and I'll add them for you.`,
                 );
             }
