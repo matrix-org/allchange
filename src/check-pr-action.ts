@@ -42,8 +42,9 @@ interface SortOfAnOctokit {
 }
 
 async function findMyComment(octokit: SortOfAnOctokit): Promise<number> {
-    console.log("Querying my user...");
-    const me = await octokit.request('GET /user');
+    console.log("Querying app...");
+    const auth = await octokit.rest.apps.getAuthenticated();
+    console.log("Response: ", auth);
 
     console.log("Listing comments...");
     const comments = await octokit.rest.issues.listComments({
@@ -51,7 +52,7 @@ async function findMyComment(octokit: SortOfAnOctokit): Promise<number> {
         issue_number: github.context.payload.number,
     });
 
-    const myComments = comments.data.filter(c => c.user.id === me.data.id);
+    const myComments = comments.data.filter(c => c.user.name === auth.data.name);
     if (myComments.length) {
         return myComments[0].id;
     }
