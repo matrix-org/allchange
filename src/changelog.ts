@@ -116,18 +116,18 @@ function engJoin(things): string {
     return result;
 }
 
-function makeChangeEntry(change: IChange, forProject: Project): string[] {
-    const lines = [];
+function makeChangeEntry(change: IChange, forProject: Project): string {
+    let line = '';
 
-    lines.push(` * ${sanitiseMarkdown(forProject.getChangeNotes(change))}`);
-    lines.push(`   [\\#${change.pr.number}](${change.pr.html_url})`);
+    line += ` * ${sanitiseMarkdown(forProject.getChangeNotes(change))}`;
+    line += ` ([\\#${change.pr.number}](${change.pr.html_url})).`;
 
     if (change.fixes.length > 0) {
         const fixesString = engJoin(change.fixes.map(c => formatIssue(c, forProject.owner, forProject.repo)));
-        lines.push(`   Fixes ${fixesString}`);
+        line += ` Fixes ${fixesString}.`;
     }
 
-    return lines;
+    return line;
 }
 
 function makeChangelogEntry(changes: IChange[], version: string, forProject: Project): string {
@@ -155,7 +155,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
     if (security.length > 0) {
         lines.push('## \uD83D\uDD12 SECURITY FIXES');
         for (const change of security) {
-            lines.push(...makeChangeEntry(change, forProject));
+            lines.push(makeChangeEntry(change, forProject));
         }
         lines.push('');
     }
@@ -163,7 +163,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
     if (breaking.length > 0) {
         lines.push('## \uD83D\uDEA8 BREAKING CHANGES');
         for (const change of breaking) {
-            lines.push(...makeChangeEntry(change, forProject));
+            lines.push(makeChangeEntry(change, forProject));
         }
         lines.push('');
     }
@@ -171,7 +171,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
     if (features.length > 0) {
         lines.push('## \u2728 Features');
         for (const change of features) {
-            lines.push(...makeChangeEntry(change, forProject));
+            lines.push(makeChangeEntry(change, forProject));
         }
         lines.push('');
     }
@@ -180,7 +180,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
         lines.push('## \uD83D\uDC1B Bug Fixes');
 
         for (const change of bugfixes) {
-            lines.push(...makeChangeEntry(change, forProject));
+            lines.push(makeChangeEntry(change, forProject));
         }
         lines.push('');
     }
