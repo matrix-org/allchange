@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 import { ChangeType, IChange } from "./changes";
-import { getChangeNotes, Project } from "./projects";
+import { getChangeNotes, IProject, Project } from "./projects";
 import { formatIssue } from "./issue";
 
 import semver, { SemVer } from 'semver';
@@ -121,7 +121,7 @@ function engJoin(things): string {
     return result;
 }
 
-function makeChangeEntry(change: IChange, forProject: Project): string {
+export function makeChangeEntry(change: IChange, forProject: IProject): string {
     let line = '';
 
     line += ` * ${sanitiseMarkdown(getChangeNotes(change, forProject.name))}`;

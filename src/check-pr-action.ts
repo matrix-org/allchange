@@ -21,7 +21,7 @@ import * as github from '@actions/github';
 import { RestEndpointMethods } from '@octokit/plugin-rest-endpoint-methods/dist-types/generated/method-types';
 import { RequestInterface } from '@octokit/types';
 
-import { breakingChangeHeader, bugFixChangeHeader, featureChangeHeader } from './changelog';
+import { breakingChangeHeader, bugFixChangeHeader, featureChangeHeader, makeChangeEntry } from './changelog';
 import {
     BREAKING_CHANGE_LABEL,
     changeFromPrInfo,
@@ -31,7 +31,6 @@ import {
     labelToChangeType,
     PrInfo,
 } from './changes';
-import { getChangeNotes } from './projects';
 
 // XXX: The Octokit that getOctokit returns doesn't really look anything like the 'Octokit'
 // type. I've given up trying to figure out what's going on with the types in this library
@@ -147,7 +146,7 @@ async function main() {
 
         const change = changeFromPrInfo(pr);
 
-        const entry = getChangeNotes(change, forProjectName);
+        const entry = makeChangeEntry(change, { name: forProjectName, ...github.context.repo });
 
         const lines = [] as string[];
         if (!hasChangeTypeLabel(pr)) {

@@ -35,6 +35,12 @@ export interface ReleaseConfig {
     subprojects: Record<string, SubProjectConfig>;
 }
 
+export interface IProject {
+    name: string;
+    owner: string;
+    repo: string;
+}
+
 export async function getPackageJsonAtVersion(dir: string, ver: string): Promise<any> {
     const gitShow = v => new Promise((resolve, reject) => {
         execFile('git', ['show', `${v}:package.json`], {
