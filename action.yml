@@ -1,8 +1,12 @@
 name: "Changelog entry checker"
 inputs:
- ghToken:
-   description: 'GitHub token'
-   required: true
+    ghToken:
+        description: 'GitHub token'
+        required: true
+    username:
+        description: 'Username for GitHub token user/app'
+        required: false
+        default: 'github-actions[bot]'
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+    using: 'docker'
+    image: 'Dockerfile'

@@ -42,9 +42,8 @@ interface SortOfAnOctokit {
 }
 
 async function findMyComment(octokit: SortOfAnOctokit): Promise<number> {
-    console.log("Querying app...");
-    const auth = await octokit.rest.apps.getAuthenticated();
-    console.log("Response: ", auth);
+    // You'd think we'd be able to get this from the token, but I haven't succeeded
+    const expectedUsername = core.getInput('username');
 
     console.log("Listing comments...");
     const comments = await octokit.rest.issues.listComments({
@@ -52,7 +51,7 @@ async function findMyComment(octokit: SortOfAnOctokit): Promise<number> {
         issue_number: github.context.payload.number,
     });
 
-    const myComments = comments.data.filter(c => c.user.name === auth.data.name);
+    const myComments = comments.data.filter(c => c.user.login === expectedUsername);
     if (myComments.length) {
         return myComments[0].id;
     }
