@@ -1,0 +1,18 @@
+name: Build Docker
+on: [push]
+    branches: ['dbkr/checkeraction']
+jobs:
+    docker:
+        runs-on: ubuntu-latest
+        permissions:
+            packages: write
+ 
+        steps:
+            - uses: actions/checkout@v2
+            - uses: mr-smithers-excellent/docker-build-push@v5
+              with:
+                  image: allchange
+                  registry: ghcr.io
+                  username: ${{ secrets.GHCR_USERNAME }}
+                  password: ${{ secrets.GHCR_TOKEN }}
+                  tags: latest
