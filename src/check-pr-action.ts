@@ -143,7 +143,6 @@ async function main() {
 
         console.log("Scanning for labels to add...");
         pr = await addLabels(octokit, pr);
-        console.log("Label scan done. New labels: ", pr.labels);
 
         const change = changeFromPrInfo(pr);
 
@@ -191,6 +190,7 @@ async function main() {
 
         postOrUpdateMyComment(lines.join("\n"), octokit);
     } catch (error) {
+        console.error(error);
         core.setFailed(error.message);
     }
 }
