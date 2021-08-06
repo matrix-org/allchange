@@ -32,6 +32,8 @@ import {
     PrInfo,
 } from './changes';
 
+const MAGIC_COMMENT = "<!-- You've found the changelog preview secret comment, congrats! -->";
+
 // XXX: The Octokit that getOctokit returns doesn't really look anything like the 'Octokit'
 // type. I've given up trying to figure out what's going on with the types in this library
 // and rather than waste any more time on it, this is the bits we need.
@@ -50,7 +52,9 @@ async function findMyComment(octokit: SortOfAnOctokit): Promise<number> {
         issue_number: github.context.payload.number,
     });
 
-    const myComments = comments.data.filter(c => c.user.login === expectedUsername);
+    const myComments = comments.data.filter(
+        c => c.user.login === expectedUsername && c.body_text.startsWith(MAGIC_COMMENT),
+    );
     if (myComments.length) {
         return myComments[0].id;
     }
@@ -64,14 +68,14 @@ async function postOrUpdateMyComment(text: string, octokit: SortOfAnOctokit) {
         await octokit.rest.issues.createComment({
             ...github.context.repo,
             issue_number: github.context.payload.number,
-            body: text,
+            body: MAGIC_COMMENT + text,
         });
     } else {
         console.log(`Updating comment ${existingCommentId}...`);
         await octokit.rest.issues.updateComment({
             ...github.context.repo,
             comment_id: existingCommentId,
-            body: text,
+            body: MAGIC_COMMENT + text,
         });
     }
 }
