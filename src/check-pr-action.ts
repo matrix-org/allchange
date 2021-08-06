@@ -42,6 +42,7 @@ interface SortOfAnOctokit {
 }
 
 async function findMyComment(octokit: SortOfAnOctokit): Promise<number> {
+    console.log("Querying my user...");
     const me = await octokit.request('GET /user');
 
     console.log("Listing comments...");
