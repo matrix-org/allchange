@@ -1,6 +1,7 @@
 name: Build Docker
-on: [push]
-    branches: ['dbkr/checkeraction']
+on:
+    push:
+        branches: ['dbkr/checkeraction']
 jobs:
     docker:
         runs-on: ubuntu-latest
