@@ -9,4 +9,4 @@ inputs:
         default: 'github-actions[bot]'
 runs:
     using: 'docker'
-    image: 'Dockerfile'
+    image: 'ghcr.io/matrix-org/allchange:latest'
