@@ -159,7 +159,7 @@ async function main() {
             if (['MEMBER', 'OWNER'].includes(change.pr.author_association)) {
                 lines.push(
                     `Add one of: ${labelsWithFormatting} to indicate what type of change this is ` +
-                    `plus ${BREAKING_CHANGE_LABEL} if it's a breaking change.`,
+                    `plus \`${BREAKING_CHANGE_LABEL}\` if it's a breaking change.`,
                 );
             } else {
                 lines.push(
