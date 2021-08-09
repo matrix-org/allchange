@@ -68,6 +68,8 @@ async function postOrUpdateMyComment(text: string, octokit: SortOfAnOctokit) {
         await octokit.rest.issues.createComment({
             ...github.context.repo,
             issue_number: github.context.payload.number,
+            // Need a newline at the end, otherwise github ignores markdown in the text
+            // it doesn't show up as a blank line
             body: MAGIC_COMMENT + "\n" + text,
         });
     } else {
