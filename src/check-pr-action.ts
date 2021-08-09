@@ -53,7 +53,7 @@ async function findMyComment(octokit: SortOfAnOctokit): Promise<number> {
     });
 
     const myComments = comments.data.filter(
-        c => c.user.login === expectedUsername && c.body_text.startsWith(MAGIC_COMMENT),
+        c => c.user.login === expectedUsername && c.body?.startsWith(MAGIC_COMMENT),
     );
     if (myComments.length) {
         return myComments[0].id;
