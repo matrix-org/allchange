@@ -68,14 +68,16 @@ async function postOrUpdateMyComment(text: string, octokit: SortOfAnOctokit) {
         await octokit.rest.issues.createComment({
             ...github.context.repo,
             issue_number: github.context.payload.number,
-            body: MAGIC_COMMENT + text,
+            // Need a newline at the end, otherwise github ignores markdown in the text
+            // it doesn't show up as a blank line
+            body: MAGIC_COMMENT + "\n" + text,
         });
     } else {
         console.log(`Updating comment ${existingCommentId}...`);
         await octokit.rest.issues.updateComment({
             ...github.context.repo,
             comment_id: existingCommentId,
-            body: MAGIC_COMMENT + text,
+            body: MAGIC_COMMENT + "\n" + text,
         });
     }
 }
@@ -113,7 +115,7 @@ async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> 
                    issue_number: pr.number,
                    labels: [label],
                 });
-            } else if (hasLabel(label, pr)) {
+            } else if (labelType !== changeType && hasLabel(label, pr)) {
                 console.log("Removing label: " + label);
                 await octokit.rest.issues.removeLabel({
                     ...github.context.repo,
