@@ -180,6 +180,7 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
                 headline = trimmed.split(':', 2)[1].trim();
             } else if (matches = line.match(PROJECT_NOTES_REGEX)) {
                 notesByProject[matches[1]] = matches[2].trim();
+                if (notesByProject[matches[1]].toLowerCase() === 'none') notesByProject[matches[1]] = null;
             } else if (matches = line.match(HASH_NUMBER_ISSUE_REGEXP)) {
                 // bafflingly, github's API doesn't give you issues fixed by this PR,
                 // so let's try to parse it ourselves (although of course this will only

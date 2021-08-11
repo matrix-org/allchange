@@ -95,7 +95,7 @@ function getDepVersion(ver: string, proj: string, branchMode: BranchMode) {
 export function getChangeNotes(change: IChange, projectName: string): string {
     if ([ChangeType.TASK, null].includes(change.changeType)) return null;
 
-    return change.notesByProject[projectName] || change.notes;
+    return change.notesByProject[projectName] !== undefined ? change.notesByProject[projectName] : change.notes;
 }
 
 export class Project {
