@@ -87,7 +87,7 @@ function hasLabel(label: string, pr: PrInfo): boolean {
 }
 
 async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> {
-    const matches = pr.body.match(/^Type: ([\w-]+)/im);
+    const matches = pr.body?.match(/^Type: ([\w-]+)/im);
     if (matches) {
         let changeType;
         switch (matches[1].toLowerCase()) {
