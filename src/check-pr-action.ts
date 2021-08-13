@@ -34,7 +34,7 @@ import {
 
 const MAGIC_HEAD = '<!-- CHANGELOG_PREVIEW_START -->\n---\n';
 const MAGIC_TAIL = '<!-- CHANGELOG_PREVIEW_END -->';
-const MAGIC_COMMENT_REGEXP = /<!-- CHANGELOG_PREVIEW_START -->(.|\n)*<!-- CHANGELOG_PREVIEW_END -->/m;
+const MAGIC_COMMENT_REGEXP = /<!-- CHANGELOG_PREVIEW_START -->(.*)<!-- CHANGELOG_PREVIEW_END -->/s;
 
 // XXX: The Octokit that getOctokit returns doesn't really look anything like the 'Octokit'
 // type. I've given up trying to figure out what's going on with the types in this library
@@ -48,9 +48,12 @@ async function updatePrBody(pr: PrInfo, text: string, octokit: SortOfAnOctokit) 
     const wrappedText = MAGIC_HEAD + text + MAGIC_TAIL;
 
     let newBody;
+    console.log("PR body: " + pr.body);
     if (pr.body?.match(MAGIC_COMMENT_REGEXP)) {
+        console.log("Matched: replacing");
         newBody = pr.body.replace(MAGIC_COMMENT_REGEXP, wrappedText);
     } else {
+        console.log("No match: appending");
         newBody = (pr.body || '') + "\n\n" + wrappedText;
     }
 
