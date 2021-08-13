@@ -21,7 +21,13 @@ import * as github from '@actions/github';
 import { RestEndpointMethods } from '@octokit/plugin-rest-endpoint-methods/dist-types/generated/method-types';
 import { RequestInterface } from '@octokit/types';
 
-import { breakingChangeHeader, bugFixChangeHeader, featureChangeHeader, makeChangeEntry } from './changelog';
+import {
+    breakingChangeHeader,
+    bugFixChangeHeader,
+    deprecationsHeader,
+    featureChangeHeader,
+    makeChangeEntry,
+} from './changelog';
 import {
     BREAKING_CHANGE_LABEL,
     changeFromPrInfo,
@@ -170,8 +176,10 @@ async function main() {
                 lines.push(breakingChangeHeader);
             } else if (change.changeType === ChangeType.FEATURE) {
                 lines.push(featureChangeHeader);
-            } else {
+            } else if (change.changeType === ChangeType.BUGFIX) {
                 lines.push(bugFixChangeHeader);
+            } else if (change.changeType === ChangeType.DEPRECATION) {
+                lines.push(deprecationsHeader);
             }
             lines.push(entry);
         }
