@@ -68,7 +68,7 @@ function hasLabel(label: string, pr: PrInfo): boolean {
 async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> {
     // If the PR already has a change type label, do nothing
     for (const label of Object.keys(labelToChangeType)) {
-        if (hasLabel(label, pr)) return;
+        if (hasLabel(label, pr)) return pr;
     }
 
     const matches = pr.body?.match(/^Type: ([\w-]+)/im);
