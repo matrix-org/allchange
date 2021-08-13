@@ -32,6 +32,7 @@ export interface IChangelogEntry {
 
 export const securityFixHeader = '## \uD83D\uDD12 SECURITY FIXES';
 export const breakingChangeHeader = '## \uD83D\uDEA8 BREAKING CHANGES';
+export const deprecationsHeader = '## \uD83E\uDD96 Deprecations';
 export const featureChangeHeader = '## \u2728 Features';
 export const bugFixChangeHeader = '## \uD83D\uDC1B Bug Fixes';
 
@@ -158,6 +159,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
     const security = shouldInclude.filter(c => c.security);
 
     const others = shouldInclude.filter(c => !c.breaking && !c.security);
+    const deprecations = others.filter(c => c.changeType == ChangeType.DEPRECATION);
     const features = others.filter(c => c.changeType == ChangeType.FEATURE);
     const bugfixes = others.filter(c => c.changeType == ChangeType.BUGFIX);
 
@@ -172,6 +174,14 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
     if (breaking.length > 0) {
         lines.push(breakingChangeHeader);
         for (const change of breaking) {
+            lines.push(makeChangeEntry(change, forProject));
+        }
+        lines.push('');
+    }
+
+    if (deprecations.length > 0) {
+        lines.push(deprecationsHeader);
+        for (const change of deprecations) {
             lines.push(makeChangeEntry(change, forProject));
         }
         lines.push('');
