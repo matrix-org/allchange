@@ -37,9 +37,11 @@ export enum ChangeType {
     FEATURE,
     BUGFIX,
     TASK,
+    DEPRECATION,
 }
 
 export const labelToChangeType = {
+    'T-Deprecation': ChangeType.DEPRECATION,
     'T-Enhancement': ChangeType.FEATURE,
     'T-Defect': ChangeType.BUGFIX,
     'T-Task': ChangeType.TASK,
