@@ -66,6 +66,11 @@ function hasLabel(label: string, pr: PrInfo): boolean {
 }
 
 async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> {
+    // If the PR already has a change type label, do nothing
+    for (const label of Object.keys(labelToChangeType)) {
+        if (hasLabel(label, pr)) return;
+    }
+
     const matches = pr.body?.match(/^Type: ([\w-]+)/im);
     if (matches) {
         let changeType;
@@ -93,13 +98,6 @@ async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> 
                     ...github.context.repo,
                    issue_number: pr.number,
                    labels: [label],
-                });
-            } else if (labelType !== changeType && hasLabel(label, pr)) {
-                console.log("Removing label: " + label);
-                await octokit.rest.issues.removeLabel({
-                    ...github.context.repo,
-                   issue_number: pr.number,
-                   name: label,
                 });
             }
         }
