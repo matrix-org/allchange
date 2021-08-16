@@ -149,7 +149,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
     const padTwo = n => String(n).padStart(2, '0');
     lines.push(`Changes in ` +
         `[${formattedVersion}](https://github.com/vector-im/element-desktop/releases/tag/v${formattedVersion}) ` +
-        `(${now.getFullYear()}-${padTwo(now.getMonth())}-${padTwo(now.getDate())})`,
+        `(${now.getFullYear()}-${padTwo(now.getMonth()+1)}-${padTwo(now.getDate())})`,
     );
     lines.push('='.repeat(lines[0].length));
     lines.push('');
