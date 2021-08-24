@@ -54,15 +54,13 @@ export async function getPackageJsonAtVersion(dir: string, ver: string): Promise
         });
     });
 
-    try {
-        // Try branches on the origin copy first so we don't rely on the branches
-        // being up to date locally. This doesn't work for tags, though (for
-        // reasons best known to git) so just try both.
-        // (Yes, we assume the remote is called 'origin').
-        return await gitShow(`origin/${ver}`);
-    } catch {
-        return gitShow(ver);
-    }
+    // We previously tried this on both origin/${ver} before just $ver to
+    // try to avoid you having to make sure your local copies of branches
+    // were merged (ie. so 'git fetch' would be fine) but this doesn't work
+    // with the release scrit as-is because it updates version in package.json
+    // and then computes the changelog without a push in between, which does
+    // feel like a reaosnable thing to do.
+    return gitShow(ver);
 }
 
 export function branchExists(dir: string, branch: string): Promise<boolean> {
