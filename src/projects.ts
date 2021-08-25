@@ -57,7 +57,7 @@ export async function getPackageJsonAtVersion(dir: string, ver: string): Promise
     // We previously tried this on both origin/${ver} before just $ver to
     // try to avoid you having to make sure your local copies of branches
     // were merged (ie. so 'git fetch' would be fine) but this doesn't work
-    // with the release scrit as-is because it updates version in package.json
+    // with the release script as-is because it updates version in package.json
     // and then computes the changelog without a push in between, which does
     // feel like a reaosnable thing to do.
     return gitShow(ver);
