@@ -43,7 +43,7 @@ async function* readChangelog(project: Project): AsyncGenerator<IChangelogEntry>
     let version;
     let fullText = '';
     for await (const line of rl) {
-        const matches = /^Changes in \[([\d.]+)\]/.exec(line);
+        const matches = /^Changes in \[([\d\w.-]+)\]/.exec(line);
         if (matches) {
             if (version) {
                 yield {
