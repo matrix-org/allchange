@@ -59,7 +59,7 @@ export async function getPackageJsonAtVersion(dir: string, ver: string): Promise
     // were merged (ie. so 'git fetch' would be fine) but this doesn't work
     // with the release script as-is because it updates version in package.json
     // and then computes the changelog without a push in between, which does
-    // feel like a reaosnable thing to do.
+    // feel like a reasonable thing to do.
     return gitShow(ver);
 }
 
