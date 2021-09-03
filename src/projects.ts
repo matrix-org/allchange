@@ -1,18 +1,11 @@
-import log from 'loglevel';
-import yaml from 'js-yaml';
-import semver from 'semver';
-import fsProm from 'fs/promises';
-import path from 'path';
+import log from "loglevel";
+import yaml from "js-yaml";
+import semver from "semver";
+import fsProm from "fs/promises";
+import path from "path";
 import { execFile } from "child_process";
 
-import {
-    changeFromPrInfo,
-    ChangeType,
-    getMergedPrs,
-    getPrInfo,
-    githubOrgRepoFromDir,
-    IChange,
-} from "./changes";
+import { changeFromPrInfo, ChangeType, getMergedPrs, getPrInfo, githubOrgRepoFromDir, IChange } from "./changes";
 
 export enum BranchMode {
     Exact, // Comparing actual released versions: use the version as-is
@@ -42,17 +35,23 @@ export interface IProject {
 }
 
 export async function getPackageJsonAtVersion(dir: string, ver: string): Promise<any> {
-    const gitShow = v => new Promise((resolve, reject) => {
-        execFile('git', ['show', `${v}:package.json`], {
-            cwd: dir,
-        }, (error, stdout) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(JSON.parse(stdout));
-            }
+    const gitShow = (v) =>
+        new Promise((resolve, reject) => {
+            execFile(
+                "git",
+                ["show", `${v}:package.json`],
+                {
+                    cwd: dir,
+                },
+                (error, stdout) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(JSON.parse(stdout));
+                    }
+                },
+            );
         });
-    });
 
     // We previously tried this on both origin/${ver} before just $ver to
     // try to avoid you having to make sure your local copies of branches
@@ -64,24 +63,29 @@ export async function getPackageJsonAtVersion(dir: string, ver: string): Promise
 }
 
 export function branchExists(dir: string, branch: string): Promise<boolean> {
-    return new Promise(resolve => {
-        execFile('git', ['rev-parse', branch], {
-            cwd: dir,
-        }, (error) => {
-            resolve(!error);
-        });
+    return new Promise((resolve) => {
+        execFile(
+            "git",
+            ["rev-parse", branch],
+            {
+                cwd: dir,
+            },
+            (error) => {
+                resolve(!error);
+            },
+        );
     });
 }
 
 function parseDepVersion(ver: string, dep: string): string {
     if (isNaN(parseInt(ver[0]))) throw new Error(`Version ${ver} of dependency ${dep} is not exact!`);
 
-    return 'v' + ver;
+    return "v" + ver;
 }
 
 function getDepVersion(ver: string, proj: string, branchMode: BranchMode) {
     if (branchMode === BranchMode.Develop) {
-        return 'develop';
+        return "develop";
     } else if (branchMode == BranchMode.Release) {
         const depSemVer = semver.parse(ver);
         return `release-v${depSemVer.major}.${depSemVer.minor}.${depSemVer.patch}`;
@@ -107,9 +111,7 @@ export class Project {
         return proj;
     }
 
-    private constructor(public name: string, public dir: string) {
-
-    }
+    private constructor(public name: string, public dir: string) {}
 
     private async init() {
         const [owner, repo] = await githubOrgRepoFromDir(this.dir);
@@ -122,7 +124,7 @@ export class Project {
 
         try {
             this.releaseConfigCache = yaml.load(
-                await fsProm.readFile(path.join(dir, 'release_config.yaml')),
+                await fsProm.readFile(path.join(dir, "release_config.yaml")),
             ) as ReleaseConfig;
             if (this.releaseConfigCache.subprojects === undefined) this.releaseConfigCache.subprojects = {};
             return this.releaseConfigCache;
@@ -139,8 +141,12 @@ export class Project {
     }
 
     public async collectChanges(
-        changes: ChangesByProject, fromVer: string, toVer: string, branchMode: BranchMode,
-        forProject = this, includeByDefault = true,
+        changes: ChangesByProject,
+        fromVer: string,
+        toVer: string,
+        branchMode: BranchMode,
+        forProject = this,
+        includeByDefault = true,
     ) {
         if (changes[this.name] !== undefined) return;
 
@@ -148,14 +154,12 @@ export class Project {
 
         log.debug(`Getting changes in ${this.name} from ${fromVer} to ${toVer}`);
         const mergedPrs = await getMergedPrs(this.dir, fromVer, toVer);
-        log.debug("Found set of merged PRs: " + mergedPrs.join(', '));
+        log.debug("Found set of merged PRs: " + mergedPrs.join(", "));
         log.debug(`Fetching PR metadata from ${this.owner}/${this.repo}...`);
         const prInfo = await getPrInfo(this.owner, this.repo, mergedPrs);
 
-        changes[this.name] = prInfo.map(changeFromPrInfo).map(c => {
-            c.shouldInclude = this.shouldIncludeChange(
-                forProject, c, includeByDefault,
-            );
+        changes[this.name] = prInfo.map(changeFromPrInfo).map((c) => {
+            c.shouldInclude = this.shouldIncludeChange(forProject, c, includeByDefault);
             return c;
         });
 
@@ -173,23 +177,25 @@ export class Project {
                     subProjectVersAtToVer[proj] = toVer;
                 } else {
                     subProjectVersAtFromVer[proj] = parseDepVersion(fromVerPackageJson.dependencies[proj], proj);
-                    subProjectVersAtToVer[proj] = getDepVersion(
-                        toVerPackageJson.dependencies[proj], proj, branchMode,
-                    );
+                    subProjectVersAtToVer[proj] = getDepVersion(toVerPackageJson.dependencies[proj], proj, branchMode);
                 }
                 log.debug(
                     `Getting changes for subproject ${proj}: ` +
-                    `${subProjectVersAtFromVer[proj]} - ${subProjectVersAtToVer[proj]}`,
+                        `${subProjectVersAtFromVer[proj]} - ${subProjectVersAtToVer[proj]}`,
                 );
 
                 // we assume subprojects have checkouts in the same parent directory
                 // as our project, named accordingly
-                const subDir = path.normalize(path.join(this.dir, '..', proj));
+                const subDir = path.normalize(path.join(this.dir, "..", proj));
 
                 const subProject = await Project.make(proj, subDir);
                 await subProject.collectChanges(
-                    changes, subProjectVersAtFromVer[proj], subProjectVersAtToVer[proj], branchMode,
-                    forProject, includeByDefault && subProjects[proj].includeByDefault,
+                    changes,
+                    subProjectVersAtFromVer[proj],
+                    subProjectVersAtToVer[proj],
+                    branchMode,
+                    forProject,
+                    includeByDefault && subProjects[proj].includeByDefault,
                 );
             }
         }

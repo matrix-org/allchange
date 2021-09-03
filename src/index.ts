@@ -16,29 +16,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import log from 'loglevel';
-import yargs from 'yargs/yargs';
-import { hideBin } from 'yargs/helpers';
-import clc from 'cli-color';
-import semver from 'semver';
+import log from "loglevel";
+import yargs from "yargs/yargs";
+import { hideBin } from "yargs/helpers";
+import clc from "cli-color";
+import semver from "semver";
 
-import {
-    ChangeType,
-    githubOrgRepoFromDir,
-    IChange,
-} from "./changes";
+import { ChangeType, githubOrgRepoFromDir, IChange } from "./changes";
 
 import { getLatestRelease, getReleaseBefore, getReleases, releasesContains } from "./releases";
-import { ChangesByProject, getPackageJsonAtVersion, Project, branchExists, BranchMode } from './projects';
-import { formatIssue } from './issue';
-import { updateChangelog } from './changelog';
+import { ChangesByProject, getPackageJsonAtVersion, Project, branchExists, BranchMode } from "./projects";
+import { formatIssue } from "./issue";
+import { updateChangelog } from "./changelog";
 
 function formatChangeType(changeType: ChangeType) {
     switch (changeType) {
         case ChangeType.FEATURE:
-            return 'Feature';
+            return "Feature";
         case ChangeType.BUGFIX:
-            return 'Bug fix';
+            return "Bug fix";
         case ChangeType.TASK:
         case null:
             return "Internal change";
@@ -48,16 +44,18 @@ function formatChangeType(changeType: ChangeType) {
 function printChangeStatus(change: IChange, projectName: string, owner: string, repo: string) {
     console.log(formatChangeType(change.changeType) + ": " + change.pr.html_url);
 
-    console.log(`\t${change.notes === null ? '<no notes>' : change.notes}`);
+    console.log(`\t${change.notes === null ? "<no notes>" : change.notes}`);
 
     for (const [proj, note] of Object.entries(change.notesByProject)) {
-        let fmt = (x) => { return x; };
+        let fmt = (x) => {
+            return x;
+        };
         if (proj === projectName) fmt = clc.bold;
         console.log("\t" + fmt(`${proj} notes: ${note}`));
     }
 
     if (change.headline) {
-        console.log('\t' + clc.bold.inverse(`HEADLINE: ${change.headline}`));
+        console.log("\t" + clc.bold.inverse(`HEADLINE: ${change.headline}`));
     }
 
     for (const fixes of change.fixes) {
@@ -73,14 +71,18 @@ function printChangeStatus(change: IChange, projectName: string, owner: string, 
 }
 
 async function main() {
-    const args = yargs(hideBin(process.argv)).option('debug', {
-        alias: 'd',
-        type: 'boolean',
-        description: "Enable debug mode",
-    }).option('check', {
-        type: 'boolean',
-        description: "Don't update changelog, just output information on what changes would be included",
-    }).help().usage("Usage: $0 [-d] [--check] <version>").argv;
+    const args = yargs(hideBin(process.argv))
+        .option("debug", {
+            alias: "d",
+            type: "boolean",
+            description: "Enable debug mode",
+        })
+        .option("check", {
+            type: "boolean",
+            description: "Don't update changelog, just output information on what changes would be included",
+        })
+        .help()
+        .usage("Usage: $0 [-d] [--check] <version>").argv;
 
     if (args._.length !== 1 && !args.check) {
         // Surely yargs should be able to do this? It seems incredibly confusing and I already regret using it
@@ -94,7 +96,7 @@ async function main() {
     }
 
     const dir = process.cwd();
-    const projectName = (await getPackageJsonAtVersion(dir, '')).name;
+    const projectName = (await getPackageJsonAtVersion(dir, "")).name;
     log.debug("Project: " + projectName);
     const project = await Project.make(projectName, dir);
     const [owner, repo] = await githubOrgRepoFromDir(dir);
@@ -107,15 +109,14 @@ async function main() {
     if (targetRelease) {
         const targetReleaseSemVer = semver.parse(targetRelease);
         const targetIsPrerelease = targetReleaseSemVer.prerelease.length > 0;
-        const toVerReleaseBranch =
-            `release-v${targetReleaseSemVer.major}.${targetReleaseSemVer.minor}.${targetReleaseSemVer.patch}`;
+        const toVerReleaseBranch = `release-v${targetReleaseSemVer.major}.${targetReleaseSemVer.minor}.${targetReleaseSemVer.patch}`;
         if (releasesContains(rels, targetRelease)) {
             log.debug("Found existing release for " + targetRelease);
             // nb. getReleases only gets the most recent 100 so this won't work
             // for older releases
             fromVer = getReleaseBefore(rels, targetRelease, targetIsPrerelease).name;
             toVer = targetRelease;
-        } else if (targetRelease !== 'develop' && await branchExists(dir, toVerReleaseBranch)) {
+        } else if (targetRelease !== "develop" && (await branchExists(dir, toVerReleaseBranch))) {
             log.debug("Found release branch for " + targetRelease);
             // 'to' release has had a release branch cut but not yet a full release
             // compare to the tip of the release branch
@@ -128,12 +129,12 @@ async function main() {
             // compare to the tip of develop (a better piece of software
             // might make this configurable...)
             fromVer = getLatestRelease(rels, targetIsPrerelease).name;
-            toVer = 'develop';
+            toVer = "develop";
             branchMode = BranchMode.Develop;
         }
     } else {
         fromVer = getLatestRelease(rels, false).name;
-        toVer = 'develop';
+        toVer = "develop";
         branchMode = BranchMode.Develop;
     }
 
@@ -144,20 +145,20 @@ async function main() {
 
     if (args.check) {
         console.log(`Will include from home project (${projectName}): `);
-        for (const change of changes[projectName].filter(c => c.shouldInclude)) {
+        for (const change of changes[projectName].filter((c) => c.shouldInclude)) {
             printChangeStatus(change, projectName, owner, repo);
         }
         for (const [subProj, subChanges] of Object.entries(changes)) {
             if (subProj === projectName) continue;
 
             console.log("\nWill include from " + subProj + ":");
-            for (const change of subChanges.filter(c => c.shouldInclude)) {
+            for (const change of subChanges.filter((c) => c.shouldInclude)) {
                 printChangeStatus(change, projectName, owner, repo);
             }
         }
 
         console.log(`\nWill omit from home project (${projectName}): `);
-        for (const change of changes[projectName].filter(c => !c.shouldInclude)) {
+        for (const change of changes[projectName].filter((c) => !c.shouldInclude)) {
             printChangeStatus(change, projectName, owner, repo);
         }
 
@@ -165,23 +166,23 @@ async function main() {
             if (subProj === projectName) continue;
 
             console.log("\nWill omit from " + subProj + ":");
-            for (const change of subChanges.filter(c => !c.shouldInclude)) {
+            for (const change of subChanges.filter((c) => !c.shouldInclude)) {
                 printChangeStatus(change, projectName, owner, repo);
             }
         }
 
-        const numBreaking = allChanges.filter(c => c.breaking).length;
-        const numFeatures = allChanges.filter(c => c.changeType == ChangeType.FEATURE).length;
+        const numBreaking = allChanges.filter((c) => c.breaking).length;
+        const numFeatures = allChanges.filter((c) => c.changeType == ChangeType.FEATURE).length;
         let suggestedBumpType;
         if (numBreaking) {
-            suggestedBumpType = 'major';
+            suggestedBumpType = "major";
         } else if (numFeatures) {
-            suggestedBumpType = 'minor';
+            suggestedBumpType = "minor";
         } else {
-            suggestedBumpType = 'patch';
+            suggestedBumpType = "patch";
         }
         const suggestedVersion = semver.inc(fromVer, suggestedBumpType);
-        console.log('');
+        console.log("");
         console.log(`${clc.bold(numBreaking)} breaking changes and ${clc.bold(numFeatures)} features.`);
         console.log(`According to semver, this would be a ${clc.bold(suggestedBumpType)} release.`);
         console.log(`Suggested version number: ${clc.bold(suggestedVersion)}`);
