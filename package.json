@@ -8,6 +8,7 @@
     "start": "ts-node src/index.ts",
     "lint": "yarn run lint:types && yarn run lint:js",
     "lint:js": "eslint src",
+    "format": "prettier --write src package.json action.yml tsconfig.json",
     "lint:types": "tsc --noEmit",
     "test": "jest"
   },
@@ -49,6 +50,7 @@
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-matrix-org": "github:matrix-org/eslint-plugin-matrix-org#main",
     "jest": "^27.0.6",
+    "prettier": "^2.3.2",
     "ts-jest": "^27.0.3",
     "ts-node": "^10.0.0",
     "typescript": "^4.3.5"
