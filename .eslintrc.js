@@ -24,5 +24,8 @@ module.exports = {
 
         "quotes": "off",
         "@typescript-eslint/no-explicit-any": "off",
+
+        // This is prettier's job now
+        "max-len": "off",
     },
 };
