@@ -1,12 +1,12 @@
 name: "Changelog entry checker"
 inputs:
     ghToken:
-        description: 'GitHub token'
+        description: "GitHub token"
         required: true
     username:
-        description: 'Username for GitHub token user/app'
+        description: "Username for GitHub token user/app"
         required: false
-        default: 'github-actions[bot]'
+        default: "github-actions[bot]"
 runs:
-    using: 'docker'
-    image: 'docker://ghcr.io/matrix-org/allchange:latest'
+    using: "docker"
+    image: "docker://ghcr.io/matrix-org/allchange:latest"

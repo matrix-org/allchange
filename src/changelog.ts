@@ -18,30 +18,30 @@ import { ChangeType, IChange } from "./changes";
 import { getChangeNotes, IProject, Project } from "./projects";
 import { formatIssue } from "./issue";
 
-import semver, { SemVer } from 'semver';
-import fs from 'fs';
-import fsProm from 'fs/promises';
-import readline from 'readline';
-import path from 'path';
-import log from 'loglevel';
+import semver, { SemVer } from "semver";
+import fs from "fs";
+import fsProm from "fs/promises";
+import readline from "readline";
+import path from "path";
+import log from "loglevel";
 
 export interface IChangelogEntry {
     version: string;
     text: string;
 }
 
-export const securityFixHeader = '## \uD83D\uDD12 SECURITY FIXES';
-export const breakingChangeHeader = '## \uD83D\uDEA8 BREAKING CHANGES';
-export const deprecationsHeader = '## \uD83E\uDD96 Deprecations';
-export const featureChangeHeader = '## \u2728 Features';
-export const bugFixChangeHeader = '## \uD83D\uDC1B Bug Fixes';
+export const securityFixHeader = "## \uD83D\uDD12 SECURITY FIXES";
+export const breakingChangeHeader = "## \uD83D\uDEA8 BREAKING CHANGES";
+export const deprecationsHeader = "## \uD83E\uDD96 Deprecations";
+export const featureChangeHeader = "## \u2728 Features";
+export const bugFixChangeHeader = "## \uD83D\uDC1B Bug Fixes";
 
 async function* readChangelog(project: Project): AsyncGenerator<IChangelogEntry> {
-    const fp = fs.createReadStream(path.join(project.dir, 'CHANGELOG.md'));
+    const fp = fs.createReadStream(path.join(project.dir, "CHANGELOG.md"));
     const rl = readline.createInterface(fp);
 
     let version;
-    let fullText = '';
+    let fullText = "";
     for await (const line of rl) {
         const matches = /^Changes in \[([\d\w.-]+)\]/.exec(line);
         if (matches) {
@@ -51,8 +51,8 @@ async function* readChangelog(project: Project): AsyncGenerator<IChangelogEntry>
                     text: fullText,
                 };
             }
-            version = 'v' + matches[1];
-            fullText = '';
+            version = "v" + matches[1];
+            fullText = "";
         }
         if (version) fullText += line + "\n";
     }
@@ -72,7 +72,7 @@ async function* readChangelog(project: Project): AsyncGenerator<IChangelogEntry>
 // escape them
 function sanitiseMarkdown(text: string): string {
     const specialChars = {
-        '*': 0,
+        "*": 0,
         // shall we do the others? let's just start with this one
     };
 
@@ -80,7 +80,7 @@ function sanitiseMarkdown(text: string): string {
         let escape = false;
         for (let i = 0; i < t.length; ++i) {
             fn(t[i], escape);
-            escape = t[i] == '\\';
+            escape = t[i] == "\\";
         }
     };
 
@@ -92,10 +92,10 @@ function sanitiseMarkdown(text: string): string {
 
     for (const [special, count] of Object.entries(specialChars)) {
         if (count % 2) {
-            let newText = '';
+            let newText = "";
             iterChars(text, (c, escape) => {
                 if (c === special && !escape) {
-                    newText += '\\' + c;
+                    newText += "\\" + c;
                 } else {
                     newText += c;
                 }
@@ -113,27 +113,27 @@ function engJoin(things): string {
     const firstLot = things.slice(0, things.length - 2);
     const lastTwo = things.slice(things.length - 2);
 
-    let result = '';
+    let result = "";
     if (firstLot.length) {
-        result = firstLot.join(', ') + ' ';
+        result = firstLot.join(", ") + " ";
     }
-    result += lastTwo.join(' and ');
+    result += lastTwo.join(" and ");
 
     return result;
 }
 
 export function makeChangeEntry(change: IChange, forProject: IProject): string {
-    let line = '';
+    let line = "";
 
     line += ` * ${sanitiseMarkdown(getChangeNotes(change, forProject.name))}`;
     line += ` ([\\#${change.pr.number}](${change.pr.html_url})).`;
 
     if (change.fixes.length > 0) {
-        const fixesString = engJoin(change.fixes.map(c => formatIssue(c, forProject.owner, forProject.repo)));
+        const fixesString = engJoin(change.fixes.map((c) => formatIssue(c, forProject.owner, forProject.repo)));
         line += ` Fixes ${fixesString}.`;
     }
 
-    if (!['MEMBER', 'OWNER'].includes(change.pr.author_association)) {
+    if (!["MEMBER", "OWNER"].includes(change.pr.author_association)) {
         line += ` Contributed by [${change.pr.user.login}](${change.pr.user.html_url}).`;
     }
 
@@ -146,29 +146,30 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
 
     const lines = [];
 
-    const padTwo = n => String(n).padStart(2, '0');
-    lines.push(`Changes in ` +
-        `[${formattedVersion}](https://github.com/vector-im/element-desktop/releases/tag/v${formattedVersion}) ` +
-        `(${now.getFullYear()}-${padTwo(now.getMonth()+1)}-${padTwo(now.getDate())})`,
+    const padTwo = (n) => String(n).padStart(2, "0");
+    lines.push(
+        `Changes in ` +
+            `[${formattedVersion}](https://github.com/vector-im/element-desktop/releases/tag/v${formattedVersion}) ` +
+            `(${now.getFullYear()}-${padTwo(now.getMonth() + 1)}-${padTwo(now.getDate())})`,
     );
-    lines.push('='.repeat(lines[0].length));
-    lines.push('');
+    lines.push("=".repeat(lines[0].length));
+    lines.push("");
 
-    const shouldInclude = changes.filter(c => c.shouldInclude);
-    const breaking = shouldInclude.filter(c => c.breaking);
-    const security = shouldInclude.filter(c => c.security);
+    const shouldInclude = changes.filter((c) => c.shouldInclude);
+    const breaking = shouldInclude.filter((c) => c.breaking);
+    const security = shouldInclude.filter((c) => c.security);
 
-    const others = shouldInclude.filter(c => !c.breaking && !c.security);
-    const deprecations = others.filter(c => c.changeType == ChangeType.DEPRECATION);
-    const features = others.filter(c => c.changeType == ChangeType.FEATURE);
-    const bugfixes = others.filter(c => c.changeType == ChangeType.BUGFIX);
+    const others = shouldInclude.filter((c) => !c.breaking && !c.security);
+    const deprecations = others.filter((c) => c.changeType == ChangeType.DEPRECATION);
+    const features = others.filter((c) => c.changeType == ChangeType.FEATURE);
+    const bugfixes = others.filter((c) => c.changeType == ChangeType.BUGFIX);
 
     if (security.length > 0) {
         lines.push(securityFixHeader);
         for (const change of security) {
             lines.push(makeChangeEntry(change, forProject));
         }
-        lines.push('');
+        lines.push("");
     }
 
     if (breaking.length > 0) {
@@ -176,7 +177,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
         for (const change of breaking) {
             lines.push(makeChangeEntry(change, forProject));
         }
-        lines.push('');
+        lines.push("");
     }
 
     if (deprecations.length > 0) {
@@ -184,7 +185,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
         for (const change of deprecations) {
             lines.push(makeChangeEntry(change, forProject));
         }
-        lines.push('');
+        lines.push("");
     }
 
     if (features.length > 0) {
@@ -192,7 +193,7 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
         for (const change of features) {
             lines.push(makeChangeEntry(change, forProject));
         }
-        lines.push('');
+        lines.push("");
     }
 
     if (bugfixes.length > 0) {
@@ -201,29 +202,25 @@ function makeChangelogEntry(changes: IChange[], version: string, forProject: Pro
         for (const change of bugfixes) {
             lines.push(makeChangeEntry(change, forProject));
         }
-        lines.push('');
+        lines.push("");
     }
 
-    lines.push('');
+    lines.push("");
 
     return lines.join("\n");
 }
 
 function isPrereleaseFor(version: SemVer, forVersion: SemVer): boolean {
-    return (
-        version.prerelease.length > 0 &&
-        forVersion.prerelease.length == 0 &&
-        version.compareMain(forVersion) === 0
-    );
+    return version.prerelease.length > 0 && forVersion.prerelease.length == 0 && version.compareMain(forVersion) === 0;
 }
 
 export async function updateChangelog(project: Project, changes: IChange[], forVersion: string) {
     const forReleaseSemVer = semver.parse(forVersion);
 
-    const changelogFile = path.join(project.dir, 'CHANGELOG.md');
-    const tmpFile = path.join(project.dir, 'CHANGELOG.tmp');
+    const changelogFile = path.join(project.dir, "CHANGELOG.md");
+    const tmpFile = path.join(project.dir, "CHANGELOG.tmp");
 
-    const outHandle = await fsProm.open(tmpFile, 'w');
+    const outHandle = await fsProm.open(tmpFile, "w");
     let changeWritten = false;
 
     for await (const entry of readChangelog(project)) {

@@ -1,10 +1,6 @@
 module.exports = {
-    plugins: [
-        "matrix-org",
-    ],
-    extends: [
-        "plugin:matrix-org/typescript",
-    ],
+    plugins: ["matrix-org"],
+    extends: ["plugin:matrix-org/typescript"],
     parserOptions: {
         tsconfigRootDir: __dirname,
         project: ["./tsconfig.json"],
@@ -12,9 +8,11 @@ module.exports = {
     env: {
         node: true,
     },
-    overrides: [{
-        files: ["src/**/*.ts"],
-    }],
+    overrides: [
+        {
+            files: ["src/**/*.ts"],
+        },
+    ],
     rules: {
         // We aren't using ES modules here yet
         "@typescript-eslint/no-var-requires": "off",
@@ -22,7 +20,7 @@ module.exports = {
         // Ensure we always explicitly access string representations
         "@typescript-eslint/no-base-to-string": "error",
 
-        "quotes": "off",
+        quotes: "off",
         "@typescript-eslint/no-explicit-any": "off",
 
         // This is prettier's job now

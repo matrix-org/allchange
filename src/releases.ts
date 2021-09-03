@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { Octokit } from '@octokit/rest';
-import { Endpoints } from '@octokit/types';
-import { ArrayElement } from './changes';
+import { Octokit } from "@octokit/rest";
+import { Endpoints } from "@octokit/types";
+import { ArrayElement } from "./changes";
 
-type Releases = Endpoints['GET /repos/{owner}/{repo}/releases']['response']['data'];
+type Releases = Endpoints["GET /repos/{owner}/{repo}/releases"]["response"]["data"];
 export type Release = ArrayElement<Releases>;
 
 // nb. this only gets a single pag, so if your're looking for a release
@@ -26,14 +26,16 @@ export type Release = ArrayElement<Releases>;
 export async function getReleases(owner: string, repo: string): Promise<Releases> {
     const octo = new Octokit();
     const rels = await octo.rest.repos.listReleases({
-        owner, repo, per_page: 100,
+        owner,
+        repo,
+        per_page: 100,
     });
 
     return rels.data;
 }
 
 export function releasesContains(rels: Releases, target: string): boolean {
-    return rels.some(r => r.name === target);
+    return rels.some((r) => r.name === target);
 }
 
 export function getLatestRelease(rels: Releases, considerRCs: boolean): Release {

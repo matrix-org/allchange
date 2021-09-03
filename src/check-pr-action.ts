@@ -16,10 +16,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import * as core from '@actions/core';
-import * as github from '@actions/github';
-import { RestEndpointMethods } from '@octokit/plugin-rest-endpoint-methods/dist-types/generated/method-types';
-import { RequestInterface } from '@octokit/types';
+import * as core from "@actions/core";
+import * as github from "@actions/github";
+import { RestEndpointMethods } from "@octokit/plugin-rest-endpoint-methods/dist-types/generated/method-types";
+import { RequestInterface } from "@octokit/types";
 
 import {
     breakingChangeHeader,
@@ -27,7 +27,7 @@ import {
     deprecationsHeader,
     featureChangeHeader,
     makeChangeEntry,
-} from './changelog';
+} from "./changelog";
 import {
     BREAKING_CHANGE_LABEL,
     changeFromPrInfo,
@@ -36,10 +36,10 @@ import {
     hasChangeTypeLabel,
     labelToChangeType,
     PrInfo,
-} from './changes';
+} from "./changes";
 
-const MAGIC_HEAD = '<!-- CHANGELOG_PREVIEW_START -->\n---\n';
-const MAGIC_TAIL = '<!-- CHANGELOG_PREVIEW_END -->';
+const MAGIC_HEAD = "<!-- CHANGELOG_PREVIEW_START -->\n---\n";
+const MAGIC_TAIL = "<!-- CHANGELOG_PREVIEW_END -->";
 const MAGIC_COMMENT_REGEXP = /<!-- CHANGELOG_PREVIEW_START -->(.*)<!-- CHANGELOG_PREVIEW_END -->/s;
 
 // XXX: The Octokit that getOctokit returns doesn't really look anything like the 'Octokit'
@@ -60,7 +60,7 @@ async function updatePrBody(pr: PrInfo, text: string, octokit: SortOfAnOctokit) 
         newBody = pr.body.replace(MAGIC_COMMENT_REGEXP, wrappedText);
     } else {
         console.log("No match: appending");
-        newBody = (pr.body || '') + "\n\n" + wrappedText;
+        newBody = (pr.body || "") + "\n\n" + wrappedText;
     }
 
     octokit.rest.issues.update({
@@ -71,7 +71,7 @@ async function updatePrBody(pr: PrInfo, text: string, octokit: SortOfAnOctokit) 
 }
 
 function hasLabel(label: string, pr: PrInfo): boolean {
-    return pr.labels.some(l => l.name === label);
+    return pr.labels.some((l) => l.name === label);
 }
 
 async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> {
@@ -84,16 +84,16 @@ async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> 
     if (matches) {
         let changeType;
         switch (matches[1].toLowerCase()) {
-            case 'enhancement':
-            case 'feature':
+            case "enhancement":
+            case "feature":
                 changeType = ChangeType.FEATURE;
                 break;
-            case 'defect':
-            case 'bugfix':
+            case "defect":
+            case "bugfix":
                 changeType = ChangeType.BUGFIX;
                 break;
-            case 'task':
-            case 'internal':
+            case "task":
+            case "internal":
                 changeType = ChangeType.TASK;
                 break;
             default:
@@ -105,8 +105,8 @@ async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> 
                 console.log("Adding label: " + label);
                 await octokit.rest.issues.addLabels({
                     ...github.context.repo,
-                   issue_number: pr.number,
-                   labels: [label],
+                    issue_number: pr.number,
+                    labels: [label],
                 });
             }
         }
@@ -128,7 +128,7 @@ async function addLabels(octokit: SortOfAnOctokit, pr: PrInfo): Promise<PrInfo> 
 async function main() {
     try {
         console.log("Starting...");
-        const myToken = core.getInput('ghToken');
+        const myToken = core.getInput("ghToken");
         const octokit = github.getOctokit(myToken);
 
         // we're assuming the repo name is the same as the project name
@@ -144,19 +144,21 @@ async function main() {
         if (!hasChangeTypeLabel(pr)) {
             lines.push("This PR currently has no changelog labels, so will not be included in changelogs.");
             lines.push("");
-            const labelsWithFormatting = getChangeTypeLabels().map(l => '`' + l + '`').join(", ");
+            const labelsWithFormatting = getChangeTypeLabels()
+                .map((l) => "`" + l + "`")
+                .join(", ");
             // This is a very crude approximation of github's permission model.
             // It will almost certainly be wrong sometimes.
-            if (['MEMBER', 'OWNER'].includes(change.pr.author_association)) {
+            if (["MEMBER", "OWNER"].includes(change.pr.author_association)) {
                 lines.push(
                     `Add one of: ${labelsWithFormatting} to indicate what type of change this is ` +
-                    `plus \`${BREAKING_CHANGE_LABEL}\` if it's a breaking change.`,
+                        `plus \`${BREAKING_CHANGE_LABEL}\` if it's a breaking change.`,
                 );
             } else {
                 lines.push(
                     `A reviewer can add one of: ${labelsWithFormatting} to ` +
-                    `indicate what type of change this is, or add \`Type: [enhancement/defect/task]\` ` +
-                    `to the description and I'll add them for you.`,
+                        `indicate what type of change this is, or add \`Type: [enhancement/defect/task]\` ` +
+                        `to the description and I'll add them for you.`,
                 );
             }
         } else if (change.changeType === ChangeType.TASK) {
@@ -164,11 +166,12 @@ async function main() {
                 "This change is marked as an *internal change* (Task), so will not be included in the changelog.",
             );
         } else if (change.notes == null) {
-            lines.push(
-                "This change has no change notes, so will not be included in the changelog.",
-            );
+            lines.push("This change has no change notes, so will not be included in the changelog.");
         } else {
-            const entry = makeChangeEntry(change, { name: forProjectName, ...github.context.repo });
+            const entry = makeChangeEntry(change, {
+                name: forProjectName,
+                ...github.context.repo,
+            });
 
             lines.push("Here's what your changelog entry will look like:");
             lines.push("");

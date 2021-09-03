@@ -8,7 +8,7 @@
     "start": "ts-node src/index.ts",
     "lint": "yarn run lint:types && yarn run lint:js",
     "lint:js": "eslint src",
-    "format": "prettier --write src package.json action.yml tsconfig.json",
+    "format": "prettier --write src package.json action.yml tsconfig.json .eslintrc.js .prettierrc.js",
     "lint:types": "tsc --noEmit",
     "test": "jest"
   },
