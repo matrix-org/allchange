@@ -148,7 +148,7 @@ export class Project {
 
         log.debug(`Getting changes in ${this.name} from ${fromVer} to ${toVer}`);
         const mergedPrs = await getMergedPrs(this.dir, fromVer, toVer);
-        log.debug("Found set of merged PRs: " + mergedPrs.join(', '));
+        log.debug("Found set of merged PRs: " + mergedPrs.map(pr => pr.PrNumber).join(', '));
         log.debug(`Fetching PR metadata from ${this.owner}/${this.repo}...`);
         const prInfo = await getPrInfo(this.owner, this.repo, mergedPrs);
 

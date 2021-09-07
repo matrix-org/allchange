@@ -33,6 +33,8 @@ const OWNER_HASH_NUMBER_ISSUE_REGEXP = /(?:close[sd]?|fix|fixe[sd]|resolve[sd]?)
 const ISSUE_URL_REGEXP =
     /(?:close[sd]?|fix|fixe[sd]|resolve[sd]?):? https?:\/\/github.com\/([\w-]*)\/([\w-]*)\/issues\/([\d]*)/i;
 
+const MERGE_COMMIT_REGEX = /Merge pull request #(\d+) from (.*)/;
+
 export enum ChangeType {
     FEATURE,
     BUGFIX,
@@ -75,6 +77,11 @@ export interface IIssueID {
     number: number;
 }
 
+export interface MergeCommit {
+    PrNumber: number;
+    sha: string;
+}
+
 export async function githubOrgRepoFromDir(repoDir: string) {
     const pkgJson = JSON.parse(await fsProm.readFile(path.join(repoDir, 'package.json'), {
         encoding: 'utf8',
@@ -95,7 +102,7 @@ export async function githubOrgRepoFromDir(repoDir: string) {
     return parts;
 }
 
-export function getMergedPrs(repoDir: string, from: string, to: string): Promise<string[]> {
+export function getMergedPrs(repoDir: string, from: string, to: string): Promise<MergeCommit[]> {
     // ew: look for some common branch names and look for the origin versions so we don't
     // rely on the local copy of the branches being pulled
     // better way of doing this? when getting the package.json we just try the 'origin' version first
@@ -104,7 +111,7 @@ export function getMergedPrs(repoDir: string, from: string, to: string): Promise
         return rev;
     };
 
-    return new Promise<string[]>((resolve) => {
+    return new Promise<MergeCommit[]>((resolve) => {
         const proc = childProcess.spawn('git', [
             'rev-list',
             '--merges',
@@ -119,12 +126,21 @@ export function getMergedPrs(repoDir: string, from: string, to: string): Promise
             input: proc.stdout,
         });
 
-        const prs = [] as string[];
+        const prs = [] as MergeCommit[];
 
+        let commit;
         rl.on('line', line => {
             const trimmed = line.trim();
-            if (trimmed.startsWith('Merge pull request #')) {
-                prs.push(trimmed.split(' ')[3].slice(1));
+
+            if (trimmed.startsWith('commit ')) {
+                commit = trimmed.split(' ')[1];
+            }
+            const match = trimmed.match(MERGE_COMMIT_REGEX);
+            if (match) {
+                prs.push({
+                    PrNumber: parseInt(match[1]),
+                    sha: commit,
+                });
             }
         });
         rl.on('close', () => {
@@ -221,10 +237,13 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
 }
 
 export async function getPrInfo(
-    repoOwner: string, repoName: string, prNumbers: string[],
+    repoOwner: string, repoName: string, mergeCommits: MergeCommit[],
 ): Promise<PrInfo[]> {
     const octo = new Octokit();
-    const prNumSet = new Set(prNumbers.map(n => parseInt(n)));
+    const prMap = new Map<number, string>();
+    for (const c of mergeCommits) {
+        prMap.set(c.PrNumber, c.sha);
+    }
     const mergedPrInfo: PrInfo[] = [];
 
     // This is how you're supposed to paginate with octokit, but it seems like the types are
@@ -244,13 +263,41 @@ export async function getPrInfo(
     });
     */
 
+    const checkAndAddPrInfo = (prInfo: PrInfo) => {
+        const expectedSha = prMap.get(prInfo.number);
+        if (prInfo.merge_commit_sha === expectedSha) {
+            mergedPrInfo.push(prInfo);
+        } else {
+            log.debug(
+                `Ignoring PR ${prInfo.number} because merge commit ` +
+                `(${prInfo.merge_commit_sha}) doesn't match git (${expectedSha})`,
+            );
+        }
+        prMap.delete(prInfo.number);
+    };
+
     let pageNum = 1;
-    while (prNumSet.size > 0) {
+    while (prMap.size > 0) {
+        if (prMap.size === 1) {
+            const prNum = prMap.keys().next().value;
+            log.debug(`Fetching remaining PR ${prNum} individually...`);
+            const prResp = await octo.pulls.get({
+                owner: repoOwner,
+                repo: repoName,
+                pull_number: prNum,
+            });
+            // XXX: The object shapes of items in the 'list pulls' API and what you
+            // get from the 'get pull' API are different. Hopefully they're close
+            // enough for our purposes...
+            checkAndAddPrInfo(prResp.data as unknown as PrInfo);
+            break;
+        }
+
         // Github doesn't have a way to get multiple PRs at once, but we can list them
         // all. Since we generally want the most recent, this is probably fine and is a
         // single API call rather than one for each merged PR.
-        log.debug(prNumSet.size + " PRs left to find");
-        log.debug("Still have to find: " + Array.from(prNumSet).join(', '));
+        log.debug(prMap.size + " PRs left to find");
+        log.debug("Still have to find: " + Array.from(prMap.keys()).join(', '));
         log.debug("Getting page " + pageNum);
         const prListResp = await octo.rest.pulls.list({
             owner: repoOwner,
@@ -266,18 +313,17 @@ export async function getPrInfo(
         if (prListResp.data.length === 0) break;
 
         for (const pr of prListResp.data) {
-            if (prNumSet.has(pr.number)) {
-                mergedPrInfo.push(pr);
-                prNumSet.delete(pr.number);
+            if (prMap.has(pr.number)) {
+                checkAndAddPrInfo(pr);
             }
         }
 
         pageNum++;
     }
 
-    if (prNumSet.size > 0) {
+    if (prMap.size > 0) {
         log.debug("Found info on prs: " + mergedPrInfo.map(pr => pr.number).join(', '));
-        log.debug("Couldn't find: " + Array.from(prNumSet).join(', '));
+        log.debug("Couldn't find: " + Array.from(prMap).join(', '));
         // 100 is the max per page so if we didn't find them all, we'll have to paginate
         throw new Error("Couldn't find all PRs");
     }
