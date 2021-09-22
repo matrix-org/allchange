@@ -237,9 +237,8 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
 }
 
 export async function getPrInfo(
-    repoOwner: string, repoName: string, mergeCommits: MergeCommit[],
+    octo: Octokit, repoOwner: string, repoName: string, mergeCommits: MergeCommit[],
 ): Promise<PrInfo[]> {
-    const octo = new Octokit();
     const prMap = new Map<number, string>();
     for (const c of mergeCommits) {
         prMap.set(c.PrNumber, c.sha);

@@ -13,6 +13,7 @@ import {
     githubOrgRepoFromDir,
     IChange,
 } from "./changes";
+import { Octokit } from '@octokit/rest';
 
 export enum BranchMode {
     Exact, // Comparing actual released versions: use the version as-is
@@ -139,7 +140,7 @@ export class Project {
     }
 
     public async collectChanges(
-        changes: ChangesByProject, fromVer: string, toVer: string, branchMode: BranchMode,
+        octo: Octokit, changes: ChangesByProject, fromVer: string, toVer: string, branchMode: BranchMode,
         forProject = this, includeByDefault = true,
     ) {
         if (changes[this.name] !== undefined) return;
@@ -150,7 +151,7 @@ export class Project {
         const mergedPrs = await getMergedPrs(this.dir, fromVer, toVer);
         log.debug("Found set of merged PRs: " + mergedPrs.map(pr => pr.PrNumber).join(', '));
         log.debug(`Fetching PR metadata from ${this.owner}/${this.repo}...`);
-        const prInfo = await getPrInfo(this.owner, this.repo, mergedPrs);
+        const prInfo = await getPrInfo(octo, this.owner, this.repo, mergedPrs);
 
         changes[this.name] = prInfo.map(changeFromPrInfo).map(c => {
             c.shouldInclude = this.shouldIncludeChange(
@@ -188,7 +189,7 @@ export class Project {
 
                 const subProject = await Project.make(proj, subDir);
                 await subProject.collectChanges(
-                    changes, subProjectVersAtFromVer[proj], subProjectVersAtToVer[proj], branchMode,
+                    octo, changes, subProjectVersAtFromVer[proj], subProjectVersAtToVer[proj], branchMode,
                     forProject, includeByDefault && subProjects[proj].includeByDefault,
                 );
             }
