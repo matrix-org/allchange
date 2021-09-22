@@ -32,6 +32,7 @@ import { getLatestRelease, getReleaseBefore, getReleases, releasesContains } fro
 import { ChangesByProject, getPackageJsonAtVersion, Project, branchExists, BranchMode } from './projects';
 import { formatIssue } from './issue';
 import { updateChangelog } from './changelog';
+import { Octokit } from '@octokit/rest';
 
 function formatChangeType(changeType: ChangeType) {
     switch (changeType) {
@@ -93,6 +94,10 @@ async function main() {
         log.setLevel(log.levels.DEBUG);
     }
 
+    const octo = new Octokit({
+        auth: process.env.CHANGELOG_GITHUB_TOKEN,
+    });
+
     const dir = process.cwd();
     const projectName = (await getPackageJsonAtVersion(dir, '')).name;
     log.debug("Project: " + projectName);
@@ -100,7 +105,7 @@ async function main() {
     const [owner, repo] = await githubOrgRepoFromDir(dir);
     let branchMode = BranchMode.Exact;
 
-    const rels = await getReleases(owner, repo);
+    const rels = await getReleases(octo, owner, repo);
     let fromVer: string;
     let toVer: string;
 
@@ -138,7 +143,7 @@ async function main() {
     }
 
     const changes = {} as ChangesByProject;
-    await project.collectChanges(changes, fromVer, toVer, branchMode);
+    await project.collectChanges(octo, changes, fromVer, toVer, branchMode);
     const allChanges = [].concat(...Object.values(changes)) as IChange[];
     //log.debug(changes);
 

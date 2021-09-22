@@ -134,7 +134,7 @@ export function makeChangeEntry(change: IChange, forProject: IProject): string {
     }
 
     if (!['MEMBER', 'OWNER'].includes(change.pr.author_association)) {
-        line += ` Contributed by [${change.pr.user.login}](${change.pr.user.html_url}).`;
+        line += ` Contributed by @${change.pr.user.login}.`;
     }
 
     return line;
