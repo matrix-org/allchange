@@ -28,6 +28,7 @@ const NOTES_MAGIC_TEXT = 'notes: ';
 const PROJECT_NOTES_REGEX = new RegExp(`^([\\w-]*) ${NOTES_MAGIC_TEXT}(.*)$`, 'i');
 const HEADLINE_MAGIC_TEXT = 'headlines: ';
 
+const SQUASH_NUMBER_REGEXP = /\(#(\d+)\)/i; // "Message (#1234)", matching the number
 const HASH_NUMBER_ISSUE_REGEXP = /(?:close[sd]?|fix|fixe[sd]|resolve[sd]?):? #(\d+)/i;
 const OWNER_HASH_NUMBER_ISSUE_REGEXP = /(?:close[sd]?|fix|fixe[sd]|resolve[sd]?):? ([\w-]*)\/([\w-]*)#(\d+)/i;
 const ISSUE_URL_REGEXP =
@@ -114,7 +115,7 @@ export function getMergedPrs(repoDir: string, from: string, to: string): Promise
     return new Promise<MergeCommit[]>((resolve) => {
         const proc = childProcess.spawn('git', [
             'rev-list',
-            '--merges',
+            // '--merges', // we have squash merges now, so can't filter
             '--format=medium',
             '^' + hackRevision(from),
             hackRevision(to),
@@ -136,9 +137,15 @@ export function getMergedPrs(repoDir: string, from: string, to: string): Promise
                 commit = trimmed.split(' ')[1];
             }
             const match = trimmed.match(MERGE_COMMIT_REGEX);
+            const squashMatch = trimmed.match(SQUASH_NUMBER_REGEXP);
             if (match) {
                 prs.push({
                     PrNumber: parseInt(match[1]),
+                    sha: commit,
+                });
+            } else if (squashMatch) {
+                prs.push({
+                    PrNumber: parseInt(squashMatch[1]),
                     sha: commit,
                 });
             }
