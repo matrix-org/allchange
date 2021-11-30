@@ -36,6 +36,8 @@ const ISSUE_URL_REGEXP =
 
 const MERGE_COMMIT_REGEX = /Merge pull request #(\d+) from (.*)/;
 
+const MAGIC_COMMENT_REGEXP = /<!-- CHANGELOG_PREVIEW_START -->(.*)<!-- CHANGELOG_PREVIEW_END -->/s;
+
 export enum ChangeType {
     FEATURE,
     BUGFIX,
@@ -193,10 +195,11 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
     let headline = null;
     const notesByProject = {};
     let matches: RegExpMatchArray;
-    const fixes = [] as IIssueID[];
+    const fixes = new Map<string, IIssueID>();
 
     if (pr.body) {
-        for (const line of pr.body.split("\n")) {
+        const bodyMainContent = pr.body.replace(MAGIC_COMMENT_REGEXP, "");
+        for (const line of bodyMainContent.split("\n")) {
             const trimmed = line.trim();
             if (trimmed.toLowerCase().startsWith(NOTES_MAGIC_TEXT)) {
                 notes = trimmed.split(':', 2)[1].trim();
@@ -210,23 +213,26 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
                 // bafflingly, github's API doesn't give you issues fixed by this PR,
                 // so let's try to parse it ourselves (although of course this will only
                 // get ones in the PR body, not the comments...)
-                fixes.push({
+                const issue = {
                     owner: pr.base.repo.owner.name,
                     repo: pr.base.repo.name,
                     number: parseInt(matches[1]),
-                });
+                };
+                fixes.set(`${issue.owner}/${issue.repo}#${issue.number}`, issue);
             } else if (matches = line.match(OWNER_HASH_NUMBER_ISSUE_REGEXP)) {
-                fixes.push({
+                const issue = {
                     owner: matches[1],
                     repo: matches[2],
                     number: parseInt(matches[3]),
-                });
+                };
+                fixes.set(`${issue.owner}/${issue.repo}#${issue.number}`, issue);
             } else if (matches = line.match(ISSUE_URL_REGEXP)) {
-                fixes.push({
+                const issue = {
                     owner: matches[1],
                     repo: matches[2],
                     number: parseInt(matches[3]),
-                });
+                };
+                fixes.set(`${issue.owner}/${issue.repo}#${issue.number}`, issue);
             }
         }
     }
@@ -237,7 +243,7 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
         notesByProject,
         headline,
         changeType,
-        fixes,
+        fixes: [...fixes.values()],
         breaking,
         security,
     };

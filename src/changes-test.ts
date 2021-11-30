@@ -236,3 +236,30 @@ test('Fixes parsed from issue URL', () => {
     }
 });
 
+test('Change reports deduplicated', () => {
+    const pr = mockPr();
+    pr.body = [
+        "Fixes #123",
+        "Fixes #123",
+    ].join("\n");
+
+    const change = changeFromPrInfo(pr);
+
+    expect(change.fixes.length).toEqual(1);
+    expect(change.fixes[0].number).toEqual(123);
+});
+
+test('Changelog preview filtered out', () => {
+    const pr = mockPr();
+    pr.body = [
+        "Fixes #123",
+        "<!-- CHANGELOG_PREVIEW_START -->",
+        "Fixes #456",
+        "<!-- CHANGELOG_PREVIEW_END -->",
+    ].join("\n");
+
+    const change = changeFromPrInfo(pr);
+
+    expect(change.fixes.length).toEqual(1);
+    expect(change.fixes[0].number).toEqual(123);
+});
