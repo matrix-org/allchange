@@ -193,7 +193,7 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
     let headline = null;
     const notesByProject = {};
     let matches: RegExpMatchArray;
-    const fixes = [] as IIssueID[];
+    const fixes = new Map<string, IIssueID>();
 
     if (pr.body) {
         for (const line of pr.body.split("\n")) {
@@ -210,23 +210,26 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
                 // bafflingly, github's API doesn't give you issues fixed by this PR,
                 // so let's try to parse it ourselves (although of course this will only
                 // get ones in the PR body, not the comments...)
-                fixes.push({
+                const issue = {
                     owner: pr.base.repo.owner.name,
                     repo: pr.base.repo.name,
                     number: parseInt(matches[1]),
-                });
+                };
+                fixes.set(`${issue.owner}/${issue.repo}#${issue.number}`, issue);
             } else if (matches = line.match(OWNER_HASH_NUMBER_ISSUE_REGEXP)) {
-                fixes.push({
+                const issue = {
                     owner: matches[1],
                     repo: matches[2],
                     number: parseInt(matches[3]),
-                });
+                };
+                fixes.set(`${issue.owner}/${issue.repo}#${issue.number}`, issue);
             } else if (matches = line.match(ISSUE_URL_REGEXP)) {
-                fixes.push({
+                const issue = {
                     owner: matches[1],
                     repo: matches[2],
                     number: parseInt(matches[3]),
-                });
+                };
+                fixes.set(`${issue.owner}/${issue.repo}#${issue.number}`, issue);
             }
         }
     }
@@ -237,7 +240,7 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
         notesByProject,
         headline,
         changeType,
-        fixes,
+        fixes: [...fixes.values()],
         breaking,
         security,
     };
