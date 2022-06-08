@@ -144,7 +144,7 @@ async function main() {
         const lines = [] as string[];
         if (!hasChangeTypeLabel(pr)) {
             if (requireLabel) {
-                lines.push("This PR currently has no changelog labels.");
+                lines.push("This PR currently has none of the required changelog labels.");
             } else {
                 lines.push("This PR currently has no changelog labels, so will not be included in changelogs.");
             }
