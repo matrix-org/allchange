@@ -129,6 +129,7 @@ async function main() {
     try {
         console.log("Starting...");
         const myToken = core.getInput('ghToken');
+        const requireLabel = core.getInput('requireLabel');
         const octokit = github.getOctokit(myToken);
 
         // we're assuming the repo name is the same as the project name
@@ -142,7 +143,11 @@ async function main() {
 
         const lines = [] as string[];
         if (!hasChangeTypeLabel(pr)) {
-            lines.push("This PR currently has no changelog labels, so will not be included in changelogs.");
+            if (requireLabel) {
+                lines.push("This PR currently has no changelog labels.");
+            } else {
+                lines.push("This PR currently has no changelog labels, so will not be included in changelogs.");
+            }
             lines.push("");
             const labelsWithFormatting = getChangeTypeLabels().map(l => '`' + l + '`').join(", ");
             // This is a very crude approximation of github's permission model.
@@ -158,6 +163,10 @@ async function main() {
                     `indicate what type of change this is, or add \`Type: [enhancement/defect/task]\` ` +
                     `to the description and I'll add them for you.`,
                 );
+            }
+            
+            if (requireLabel) {
+                core.setFailed(lines.join("\n"));
             }
         } else if (change.changeType === ChangeType.TASK) {
             lines.push(
