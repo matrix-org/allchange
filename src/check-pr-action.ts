@@ -164,7 +164,7 @@ async function main() {
                     `to the description and I'll add them for you.`,
                 );
             }
-            
+
             if (requireLabel) {
                 core.setFailed(lines.join("\n"));
             }
