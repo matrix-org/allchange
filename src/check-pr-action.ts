@@ -129,7 +129,7 @@ async function main() {
     try {
         console.log("Starting...");
         const myToken = core.getInput('ghToken');
-        const requireLabel = core.getInput('requireLabel');
+        const requireLabel = core.getBooleanInput('requireLabel');
         const octokit = github.getOctokit(myToken);
 
         // we're assuming the repo name is the same as the project name
