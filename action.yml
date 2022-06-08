@@ -7,6 +7,10 @@ inputs:
         description: 'Username for GitHub token user/app'
         required: false
         default: 'github-actions[bot]'
+    requireLabel:
+        description: 'If set then a T- label must be set for this to pass'
+        required: false
+        default: false
 runs:
     using: 'docker'
     image: 'docker://ghcr.io/matrix-org/allchange:latest'
