@@ -36,6 +36,7 @@ const ISSUE_URL_REGEXP =
 
 const MERGE_COMMIT_REGEX = /Merge pull request #(\d+) from (.*)/;
 
+const COMMENT_REGEXP = /<!--(.*?)-->/s;
 const MAGIC_COMMENT_REGEXP = /<!-- CHANGELOG_PREVIEW_START -->(.*)<!-- CHANGELOG_PREVIEW_END -->/s;
 
 export enum ChangeType {
@@ -198,7 +199,7 @@ export function changeFromPrInfo(pr: PrInfo): IChange {
     const fixes = new Map<string, IIssueID>();
 
     if (pr.body) {
-        const bodyMainContent = pr.body.replace(MAGIC_COMMENT_REGEXP, "");
+        const bodyMainContent = pr.body.replace(MAGIC_COMMENT_REGEXP, "").replace(COMMENT_REGEXP, "");
         for (const line of bodyMainContent.split("\n")) {
             const trimmed = line.trim();
             if (trimmed.toLowerCase().startsWith(NOTES_MAGIC_TEXT)) {
