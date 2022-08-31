@@ -36,8 +36,8 @@ const ISSUE_URL_REGEXP =
 
 const MERGE_COMMIT_REGEX = /Merge pull request #(\d+) from (.*)/;
 
-const COMMENT_REGEXP = /<!--(.*?)-->/s;
-const MAGIC_COMMENT_REGEXP = /<!-- CHANGELOG_PREVIEW_START -->(.*)<!-- CHANGELOG_PREVIEW_END -->/s;
+const COMMENT_REGEXP = /<!--(.*?)-->/gs;
+const MAGIC_COMMENT_REGEXP = /<!-- CHANGELOG_PREVIEW_START -->(.*)<!-- CHANGELOG_PREVIEW_END -->/gs;
 
 export enum ChangeType {
     FEATURE,
