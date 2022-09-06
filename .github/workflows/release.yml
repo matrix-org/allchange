@@ -1,0 +1,27 @@
+name: Release Process
+on:
+  release:
+    types: [ published ]
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+jobs:
+  npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧮 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🔧 Yarn cache
+        uses: actions/setup-node@v3
+        with:
+          cache: "yarn"
+
+      - name: 🔨 Install dependencies
+        run: "yarn install --pure-lockfile"
+
+      - name: 🚀 Publish to npm
+        id: npm-publish
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
