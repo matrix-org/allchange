@@ -17,7 +17,7 @@ limitations under the License.
 */
 
 import log from 'loglevel';
-import yargs from 'yargs/yargs';
+import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import clc from 'cli-color';
 import semver from 'semver';
@@ -31,7 +31,7 @@ import {
 import { getLatestRelease, getReleaseBefore, getReleases, releasesContains } from "./releases";
 import { ChangesByProject, getPackageJsonAtVersion, Project, branchExists, BranchMode } from './projects';
 import { formatIssue } from './issue';
-import { updateChangelog } from './changelog';
+import { previewChangelog, updateChangelog } from './changelog';
 import { Octokit } from '@octokit/rest';
 
 function formatChangeType(changeType: ChangeType) {
@@ -74,21 +74,35 @@ function printChangeStatus(change: IChange, projectName: string, owner: string, 
 }
 
 async function main() {
-    const args = yargs(hideBin(process.argv)).option('debug', {
-        alias: 'd',
-        type: 'boolean',
-        description: "Enable debug mode",
-    }).option('check', {
-        type: 'boolean',
-        description: "Don't update changelog, just output information on what changes would be included",
-    }).help().usage("Usage: $0 [-d] [--check] <version>").argv;
+    const args = yargs(hideBin(process.argv)).version(false).options({
+        "debug": {
+            alias: 'd',
+            type: 'boolean',
+            description: "Enable debug mode",
+        },
+        "check": {
+            type: 'boolean',
+            description: "Don't update changelog, just output information on what changes would be included",
+            conflicts: ["preview"],
+        },
+        "preview": {
+            type: "boolean",
+            description: "Generate changelog as normal, but without version header and output to STDOUT.",
+            conflicts: ["check"],
+        },
+    }).command("* [version]", "Generate changelog for the given version", yargs => (
+        yargs.positional("version", {
+            description: "The version to generate the changelog for, " +
+                "required if --check and/or --preview are not specified.",
+            type: "string",
+        })
+    )).help().parseSync();
 
-    if (args._.length !== 1 && !args.check) {
+    if (!args.version && !args.check && !args.preview) {
         // Surely yargs should be able to do this? It seems incredibly confusing and I already regret using it
         console.log("No version specified");
         return;
     }
-    const targetRelease = args._[0] as string;
 
     if (args.debug) {
         log.setLevel(log.levels.DEBUG);
@@ -109,26 +123,33 @@ async function main() {
     let fromVer: string;
     let toVer: string;
 
-    if (targetRelease) {
-        const targetReleaseSemVer = semver.parse(targetRelease);
+    if (args.version) {
+        const targetReleaseSemVer = semver.parse(args.version);
         const targetIsPrerelease = targetReleaseSemVer.prerelease.length > 0;
         const toVerReleaseBranch =
             `release-v${targetReleaseSemVer.major}.${targetReleaseSemVer.minor}.${targetReleaseSemVer.patch}`;
-        if (releasesContains(rels, targetRelease)) {
-            log.debug("Found existing release for " + targetRelease);
+        if (releasesContains(rels, args.version)) {
+            log.debug("Found existing release for " + args.version);
             // nb. getReleases only gets the most recent 100 so this won't work
             // for older releases
-            fromVer = getReleaseBefore(rels, targetRelease, targetIsPrerelease).name;
-            toVer = targetRelease;
-        } else if (targetRelease !== 'develop' && await branchExists(dir, toVerReleaseBranch)) {
-            log.debug("Found release branch for " + targetRelease);
+            fromVer = getReleaseBefore(rels, args.version, targetIsPrerelease).name;
+            toVer = args.version;
+        } else if (args.version !== 'develop' && await branchExists(dir, toVerReleaseBranch)) {
+            log.debug("Found release branch for " + args.version);
             // 'to' release has had a release branch cut but not yet a full release
             // compare to the tip of the release branch
             fromVer = getLatestRelease(rels, targetIsPrerelease).name;
             toVer = toVerReleaseBranch;
             branchMode = BranchMode.Release;
+        } else if (args.version !== 'develop' && await branchExists(dir, "staging")) {
+            log.debug("Found release branch for " + args.version);
+            // 'to' release has had a release branch cut but not yet a full release
+            // compare to the tip of the release branch
+            fromVer = getLatestRelease(rels, targetIsPrerelease).name;
+            toVer = "staging";
+            branchMode = BranchMode.Release;
         } else {
-            log.debug("Found neither release nor branch for " + targetRelease);
+            log.debug("Found neither release nor branch for " + args.version);
             // the 'to' release is an doesn't-yet-exist future release -
             // compare to the tip of develop (a better piece of software
             // might make this configurable...)
@@ -177,7 +198,7 @@ async function main() {
 
         const numBreaking = allChanges.filter(c => c.breaking).length;
         const numFeatures = allChanges.filter(c => c.changeType == ChangeType.FEATURE).length;
-        let suggestedBumpType;
+        let suggestedBumpType: "major" | "minor" | "patch";
         if (numBreaking) {
             suggestedBumpType = 'major';
         } else if (numFeatures) {
@@ -193,8 +214,13 @@ async function main() {
         return;
     }
 
-    log.debug("Updating changelog entry for " + targetRelease);
-    await updateChangelog(project, allChanges, targetRelease);
+    if (args.preview) {
+        await previewChangelog(project, allChanges);
+        return;
+    }
+
+    log.debug("Updating changelog entry for " + args.version);
+    await updateChangelog(project, allChanges, args.version);
 }
 
 main();
