@@ -140,20 +140,22 @@ export function makeChangeEntry(change: IChange, forProject: IProject): string {
     return line;
 }
 
-function makeChangelogEntry(changes: IChange[], version: string, forProject: Project): string {
-    const formattedVersion = semver.parse(version).format(); // easy way of removing the leading 'v'
+function makeChangelogEntry(changes: IChange[], version: string | null, forProject: Project): string {
+    const formattedVersion = version ? semver.parse(version).format() : null; // easy way of removing the leading 'v'
     const now = new Date();
 
-    const lines = [];
+    const lines: string[] = [];
 
-    const padTwo = n => String(n).padStart(2, '0');
-    lines.push(`Changes in ` +
-        `[${formattedVersion}]` +
-        `(https://github.com/${forProject.owner}/${forProject.repo}/releases/tag/v${formattedVersion}) ` +
-        `(${now.getFullYear()}-${padTwo(now.getMonth()+1)}-${padTwo(now.getDate())})`,
-    );
-    lines.push('='.repeat(lines[0].length));
-    lines.push('');
+    if (version !== null) {
+        const padTwo = (n: number) => String(n).padStart(2, '0');
+        lines.push(`Changes in ` +
+            `[${formattedVersion}]` +
+            `(https://github.com/${forProject.owner}/${forProject.repo}/releases/tag/v${formattedVersion}) ` +
+            `(${now.getFullYear()}-${padTwo(now.getMonth()+1)}-${padTwo(now.getDate())})`,
+        );
+        lines.push('='.repeat(lines[0].length));
+        lines.push('');
+    }
 
     const shouldInclude = changes.filter(c => c.shouldInclude);
     const breaking = shouldInclude.filter(c => c.breaking);
@@ -216,6 +218,10 @@ function isPrereleaseFor(version: SemVer, forVersion: SemVer): boolean {
         forVersion.prerelease.length == 0 &&
         version.compareMain(forVersion) === 0
     );
+}
+
+export async function previewChangelog(project: Project, changes: IChange[]) {
+    console.log(makeChangelogEntry(changes, null, project));
 }
 
 export async function updateChangelog(project: Project, changes: IChange[], forVersion: string) {
