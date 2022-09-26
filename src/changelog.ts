@@ -40,10 +40,10 @@ async function* readChangelog(project: Project): AsyncGenerator<IChangelogEntry>
     const fp = fs.createReadStream(path.join(project.dir, 'CHANGELOG.md'));
     const rl = readline.createInterface(fp);
 
-    let version;
+    let version: string;
     let fullText = '';
     for await (const line of rl) {
-        const matches = /^Changes in \[([\d\w.-]+)\]/.exec(line);
+        const matches = /^Changes in \[([\w.-]+)]/.exec(line);
         if (matches) {
             if (version) {
                 yield {
@@ -107,7 +107,7 @@ function sanitiseMarkdown(text: string): string {
     return text;
 }
 
-function engJoin(things): string {
+function engJoin(things: string[]): string {
     if (things.length === 1) return things[0];
 
     const firstLot = things.slice(0, things.length - 2);
@@ -239,6 +239,15 @@ export async function updateChangelog(project: Project, changes: IChange[], forV
             // This is the exact version we should be updating: replace it
             await outHandle.write(makeChangelogEntry(changes, forVersion, project));
             changeWritten = true;
+        } else if (isPrereleaseFor(semver.parse(entry.version), forReleaseSemVer)) {
+            log.debug(`Found ${entry.version} which is a prerelease of the version we should be updating`);
+            // This is a prerelease of the version we're trying to write, so remove the
+            // prerelease entry from the changelog and replace it with the entry we're
+            // writing, if we haven't already written it
+            if (!changeWritten) {
+                await outHandle.write(makeChangelogEntry(changes, forVersion, project));
+                changeWritten = true;
+            }
         } else if (forReleaseSemVer.compare(entry.version) === 1) {
             // This one comes before the one we're updating, so if we haven't yet written
             // our changeset, we need to do it now.
@@ -249,14 +258,6 @@ export async function updateChangelog(project: Project, changes: IChange[], forV
             }
             // and then write the one we found too
             await outHandle.write(entry.text);
-        } else if (isPrereleaseFor(semver.parse(entry.version), forReleaseSemVer)) {
-            log.debug(`Found ${entry.version} which is a prerelease of the version we should be updating`);
-            // This is a prerelease of the version we're trying to write, so remove the
-            // prerelease entry from the changelog and replace it with the entry we're
-            // writing, if we haven't already written it
-            if (!changeWritten) {
-                await outHandle.write(makeChangelogEntry(changes, forVersion, project));
-            }
         } else {
             log.debug(`Found ${entry.version} which is newer than the version we should be updating`);
             await outHandle.write(entry.text);
