@@ -168,7 +168,12 @@ async function main() {
             if (requireLabel) {
                 core.setFailed(lines.join("\n"));
             }
-        } else if (change.changeType === ChangeType.TASK) {
+        } else if (change.notes == null && change.breaking) {
+            lines.push(
+                "This change is marked as *breaking*, but is missing a changelog entry.",
+            );
+            core.setFailed(lines.join("\n"));
+        } else if (change.changeType === ChangeType.TASK && !change.breaking) {
             lines.push(
                 "This change is marked as an *internal change* (Task), so will not be included in the changelog.",
             );
