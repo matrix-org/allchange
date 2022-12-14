@@ -168,19 +168,19 @@ async function main() {
             if (requireLabel) {
                 core.setFailed(lines.join("\n"));
             }
-        } else if (change.notes == null || change.changeType === ChangeType.TASK) {
-            if (change.breaking) {
-                lines.push("This change is marked as *breaking*, but is missing a changelog entry.");
-                core.setFailed(lines.join("\n"));
-            } else if (change.changeType === ChangeType.TASK) {
-                lines.push(
-                    "This change is marked as an *internal change* (Task), so will not be included in the changelog.",
-                );
-            } else {
-                lines.push(
-                    "This change has no change notes, so will not be included in the changelog.",
-                );
-            }
+        } else if (change.notes == null && change.breaking) {
+            lines.push(
+                "This change is marked as *breaking*, but is missing a changelog entry.",
+            );
+            core.setFailed(lines.join("\n"));
+        } else if (change.changeType === ChangeType.TASK) {
+            lines.push(
+                "This change is marked as an *internal change* (Task), so will not be included in the changelog.",
+            );
+        } else if (change.notes == null) {
+            lines.push(
+                "This change has no change notes, so will not be included in the changelog.",
+            );
         } else {
             const entry = makeChangeEntry(change, { name: forProjectName, ...github.context.repo });
 
