@@ -168,7 +168,7 @@ async function main() {
             if (requireLabel) {
                 core.setFailed(lines.join("\n"));
             }
-        } else if (change.notes == null) {
+        } else if (change.notes == null || change.changeType === ChangeType.TASK) {
             if (change.breaking) {
                 lines.push("This change is marked as *breaking*, but is missing a changelog entry.");
                 core.setFailed(lines.join("\n"));
