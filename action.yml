@@ -8,7 +8,7 @@ inputs:
         required: false
         default: 'github-actions[bot]'
     requireLabel:
-        description: 'If true then a T- label must be applied'
+        description: 'If true then one of "T-Deprecation", "T-Enhancement", "T-Defect", or "T-Task" labels must be present'
         required: false
         default: false
 runs:
